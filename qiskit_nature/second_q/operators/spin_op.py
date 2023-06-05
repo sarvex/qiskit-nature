@@ -234,10 +234,10 @@ class SpinOp(SparseLabelOp):
 
     def _new_instance(self, data: Mapping[str, _TCoeff], *, other: SpinOp | None = None) -> SpinOp:
         num_s = self.num_spins
-        spin = self.spin
         if other is not None:
             other_num_s = other.num_spins
             other_spin = other.spin
+            spin = self.spin
             if spin != other_spin:
                 raise TypeError(
                     f"Invalid operation between operators with different spin"
@@ -459,7 +459,7 @@ class SpinOp(SparseLabelOp):
                 # add sign from Y-terms (Y^T=-Y)
                 if char == "Y" and exp % 2:
                     coeff *= -1
-            data[" ".join(lbl for lbl in reversed(label.split()))] = coeff
+            data[" ".join(reversed(label.split()))] = coeff
 
         return self._new_instance(data)
 

@@ -70,8 +70,7 @@ class WatsonHamiltonian:
     ) -> Generator[tuple[complex, tuple[int, ...]], None, None]:
         if isinstance(array, np.ndarray):
             for index in np.ndindex(*array.shape):
-                value = array[index]
-                if value:
+                if value := array[index]:
                     yield value, tuple((-1) ** kinetic * (i + 1) for i in index)
         elif isinstance(array, SparseArray):
             coo = as_coo(array)
@@ -79,11 +78,7 @@ class WatsonHamiltonian:
                 yield value, tuple((-1) ** kinetic * (i + 1) for i in index)
 
     def __iter__(self) -> Generator[tuple[complex, tuple[int, ...]], None, None]:
-        for value, index in self._iter_array(self.quadratic_force_constants):
-            yield value, index
-        for value, index in self._iter_array(self.cubic_force_constants):
-            yield value, index
-        for value, index in self._iter_array(self.quartic_force_constants):
-            yield value, index
-        for value, index in self._iter_array(self.kinetic_coefficients, kinetic=True):
-            yield value, index
+        yield from self._iter_array(self.quadratic_force_constants)
+        yield from self._iter_array(self.cubic_force_constants)
+        yield from self._iter_array(self.quartic_force_constants)
+        yield from self._iter_array(self.kinetic_coefficients, kinetic=True)

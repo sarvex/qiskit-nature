@@ -106,12 +106,8 @@ class VSCF(BlueprintCircuit):
             )
         self._invalidate()
 
-        if isinstance(mapper, QubitConverter):
+        if isinstance(mapper, (QubitConverter, TaperedQubitMapper)):
             mapper = mapper.mapper
-        elif isinstance(mapper, TaperedQubitMapper):
-            # we also include the TaperedQubitMapper here, purely for the check done below
-            mapper = mapper.mapper
-
         if not isinstance(mapper, DirectMapper):
             logger.warning(
                 "The only supported `QubitConverter` or `QubitMapper` for this application are those "
@@ -253,13 +249,7 @@ def vscf_bitstring_mapped(
     if isinstance(qubit_op, PauliSumOp):
         qubit_op = qubit_op.primitive
 
-    # We check the mapped operator `x` part of the paulis because we want to have particles
-    # i.e. True, where the initial state introduced a creation (`+`) operator.
-    bits = []
-    for bit in qubit_op.paulis.x[0]:
-        bits.append(bit)
-
-    return bits
+    return list(qubit_op.paulis.x[0])
 
 
 def vscf_bitstring(num_modals: list[int]) -> list[bool]:

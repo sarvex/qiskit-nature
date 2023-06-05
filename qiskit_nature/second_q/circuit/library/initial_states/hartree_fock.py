@@ -187,10 +187,7 @@ class HartreeFock(BlueprintCircuit):
                 raise ValueError("The qubit mapper cannot be `None`.")
             return False
 
-        if isinstance(self.qubit_mapper, QubitConverter):
-            mapper = self.qubit_mapper.mapper
-        elif isinstance(self.qubit_mapper, TaperedQubitMapper):
-            # we also include the TaperedQubitMapper here, purely for the check done below
+        if isinstance(self.qubit_mapper, (QubitConverter, TaperedQubitMapper)):
             mapper = self.qubit_mapper.mapper
         else:
             mapper = self.qubit_mapper
@@ -311,13 +308,7 @@ def hartree_fock_bitstring_mapped(
     if isinstance(qubit_op, PauliSumOp):
         qubit_op = qubit_op.primitive
 
-    # We check the mapped operator `x` part of the paulis because we want to have particles
-    # i.e. True, where the initial state introduced a creation (`+`) operator.
-    bits = []
-    for bit in qubit_op.paulis.x[0]:
-        bits.append(bit)
-
-    return bits
+    return list(qubit_op.paulis.x[0])
 
 
 def hartree_fock_bitstring(num_spatial_orbitals: int, num_particles: tuple[int, int]) -> list[bool]:

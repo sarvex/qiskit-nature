@@ -257,23 +257,21 @@ class QEOM(ExcitedStatesSolver):
         self, operators: SparseLabelOp | ListOrDictType[SparseLabelOp]
     ) -> PauliSumOp | ListOrDictType[PauliSumOp]:
         if isinstance(self.qubit_mapper, QubitConverter):
-            mapped_ops = self.qubit_mapper.convert_match(operators)
+            return self.qubit_mapper.convert_match(operators)
         elif isinstance(self.qubit_mapper, TaperedQubitMapper):
-            mapped_ops = self.qubit_mapper.map_clifford(operators)
+            return self.qubit_mapper.map_clifford(operators)
         else:
-            mapped_ops = self.qubit_mapper.map(operators)
-        return mapped_ops
+            return self.qubit_mapper.map(operators)
 
     def _taper_operators(
         self, operators: PauliSumOp | ListOrDictType[PauliSumOp]
     ) -> PauliSumOp | ListOrDictType[PauliSumOp]:
         if isinstance(self.qubit_mapper, QubitConverter):
-            tapered_ops = self.qubit_mapper.symmetry_reduce_clifford(operators)
+            return self.qubit_mapper.symmetry_reduce_clifford(operators)
         elif isinstance(self.qubit_mapper, TaperedQubitMapper):
-            tapered_ops = self.qubit_mapper.taper_clifford(operators, suppress_none=True)
+            return self.qubit_mapper.taper_clifford(operators, suppress_none=True)
         else:
-            tapered_ops = operators
-        return tapered_ops
+            return operators
 
     def get_qubit_operators(
         self,
@@ -445,7 +443,7 @@ class QEOM(ExcitedStatesSolver):
             expansion_coefs_rescaled,
         )
 
-        result = self._build_qeom_result(
+        return self._build_qeom_result(
             problem,
             groundstate_result,
             expansion_coefs,
@@ -458,8 +456,6 @@ class QEOM(ExcitedStatesSolver):
             transition_amplitudes,
             gammas_square,
         )
-
-        return result
 
     def _build_hopping_ops(
         self, problem: BaseProblem
@@ -862,7 +858,7 @@ class QEOM(ExcitedStatesSolver):
         identity_op = SparsePauliOp(["I" * num_qubits], [1.0])
 
         ordered_keys = [f"E_{k}" for k in range(size)] + [f"Edag_{k}" for k in range(size)]
-        ordered_signs = [1 for k in range(size)] + [-1 for k in range(size)]
+        ordered_signs = [1 for _ in range(size)] + [-1 for _ in range(size)]
 
         translated_hopping_ops = {}
         for key, sign in zip(ordered_keys, ordered_signs):
@@ -889,9 +885,7 @@ class QEOM(ExcitedStatesSolver):
             for i in range(expansion_coefs_rescaled.shape[1])
         ]
 
-        excitations_ops_reduced = [identity_op] + excitations_ops
-
-        return excitations_ops_reduced
+        return [identity_op] + excitations_ops
 
     def _prepare_excited_states_observables(
         self,
@@ -1010,7 +1004,7 @@ class QEOM(ExcitedStatesSolver):
             indices_diag_as_list = list(zip(indices_diag[0], indices_diag[1]))
             for indice in indices_diag_as_list:
                 aux_operators_eigenvalues[indice] = {}
-                for aux_name in untap_aux_ops.keys():
+                for aux_name in untap_aux_ops:
                     aux_operators_eigenvalues[indice][aux_name] = aux_measurements.get(
                         (aux_name, indice[0], indice[1]), (0.0, {})
                     )
@@ -1020,7 +1014,7 @@ class QEOM(ExcitedStatesSolver):
             indices_offdiag_as_list = list(zip(indices_offdiag[0], indices_offdiag[1]))
             for indice in indices_offdiag_as_list:
                 transition_amplitudes[indice] = {}
-                for aux_name in untap_aux_ops.keys():
+                for aux_name in untap_aux_ops:
                     transition_amplitudes[indice][aux_name] = aux_measurements.get(
                         (aux_name, indice[0], indice[1]), (0.0, {})
                     )
@@ -1062,9 +1056,7 @@ class QEOM(ExcitedStatesSolver):
             groundstate_result.eigenvalues[0], excited_eigenenergies
         )
         eigenstate_result = EigenstateResult.from_result(qeom_result)
-        result = problem.interpret(eigenstate_result)
-
-        return result
+        return problem.interpret(eigenstate_result)
 
 
 class QEOMResult(EigensolverResult):

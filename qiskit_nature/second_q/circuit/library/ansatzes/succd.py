@@ -186,8 +186,6 @@ class SUCCD(UCC):
             )
         )
         num_electrons = num_particles[0]
-        beta_index_shift = num_spatial_orbitals
-
         if self._mirror:
             # We can use `generate_fermionic_excitations` here because we want to include the
             # symmetrically mirrored double excitations
@@ -207,6 +205,8 @@ class SUCCD(UCC):
                 num_spatial_orbitals, num_electrons, generalized=self._generalized
             )
             logger.debug("Generated list of single alpha excitations: %s", alpha_excitations)
+
+            beta_index_shift = num_spatial_orbitals
 
             # Find all possible double excitations constructed from the list of single excitations.
             # Note, that we use `combinations_with_replacement` here, in order to also get those
@@ -283,7 +283,7 @@ class SUCCD(UCC):
 
         self._excitations_dict = excitations_dictionary
 
-        for exc_level, exc_level_items in excitations_dictionary.items():
+        for exc_level_items in excitations_dictionary.values():
             sum_ops = cast(
                 FermionicOp, sum(super()._build_fermionic_excitation_ops(exc_level_items))
             )

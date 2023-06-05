@@ -35,7 +35,7 @@ def _rows_are_orthonormal(mat: np.ndarray, rtol: float = 1e-5, atol: float = 1e-
 def _validate_transformation_matrix(
     mat: np.ndarray, rtol: float = 1e-5, atol: float = 1e-8
 ) -> None:
-    if not len(mat.shape) == 2:
+    if len(mat.shape) != 2:
         raise ValueError(
             "transformation_matrix must be a 2-dimensional array. "
             f"Instead, got shape {mat.shape}."
@@ -221,9 +221,8 @@ def _bogoliubov_transform_num_conserving_jw(  # pylint: disable=invalid-name
 
     # compute left and right Givens rotations
     for i in range(n - 1):
-        if i % 2 == 0:
-            # rotate columns by right multiplication
-            for j in range(i + 1):
+        for j in range(i + 1):
+            if i % 2 == 0:
                 target_index = i - j
                 row = n - j - 1
                 if not np.isclose(current_matrix[row, target_index], 0.0):
@@ -238,9 +237,7 @@ def _bogoliubov_transform_num_conserving_jw(  # pylint: disable=invalid-name
                         givens_mat,
                         [(Ellipsis, target_index + 1), (Ellipsis, target_index)],
                     )
-        else:
-            # rotate rows by left multiplication
-            for j in range(i + 1):
+            else:
                 target_index = n - i + j - 1
                 col = j
                 if not np.isclose(current_matrix[target_index, col], 0.0):

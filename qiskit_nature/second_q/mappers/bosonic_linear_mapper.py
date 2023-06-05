@@ -145,9 +145,7 @@ class BosonicLinearMapper(BosonicMapper):
             # Add the map of the single boson op (e.g. +_0) to the map of the full bosonic operator
             pauli_op.append(coeff * reduce(operator.add, bos_op_to_pauli_op.simplify()))
 
-        # return the lookup table for the transformed XYZI operators
-        bos_op_encoding = reduce(operator.add, pauli_op)
-        return bos_op_encoding
+        return reduce(operator.add, pauli_op)
 
     @classmethod
     @lru_cache(maxsize=32)

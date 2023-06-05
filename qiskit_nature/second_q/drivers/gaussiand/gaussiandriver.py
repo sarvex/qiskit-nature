@@ -119,7 +119,7 @@ class GaussianDriver(ElectronicStructureDriver):
         name = "".join(molecule.symbols)
         geom = "\n".join(
             [
-                name + " " + " ".join(map(str, coord))
+                f"{name} " + " ".join(map(str, coord))
                 for (name, coord) in zip(molecule.symbols, molecule.coords)
             ]
         )
@@ -138,9 +138,7 @@ class GaussianDriver(ElectronicStructureDriver):
         Returns:
             A driver acceptable basis.
         """
-        if basis == "sto3g":
-            return "sto-3g"
-        return basis
+        return "sto-3g" if basis == "sto3g" else basis
 
     @staticmethod
     def check_method_supported(method: MethodType) -> None:
@@ -237,10 +235,9 @@ class GaussianDriver(ElectronicStructureDriver):
                         blank = True
                         if section_count == 2:
                             break
-                    else:
-                        if blank:
-                            section_count += 1
-                            blank = False
+                    elif blank:
+                        section_count += 1
+                        blank = False
                     outf.write(line)
 
                 outf.write(line)
@@ -249,11 +246,11 @@ class GaussianDriver(ElectronicStructureDriver):
 
                 # Whatever is left in the original config we just append without further inspection
                 while True:
-                    line = inf.readline()
-                    if not line:
-                        break
-                    outf.write(line)
+                    if line := inf.readline():
+                        outf.write(line)
 
+                    else:
+                        break
                 cfgaug = outf.getvalue()
 
         return cfgaug
@@ -479,5 +476,4 @@ class GaussianDriver(ElectronicStructureDriver):
         if m_x is None:
             return None
         dims = tuple(abs(i) for i in m_x.dimens)
-        mat = np.reshape(m_x.expand(), dims, order="F")
-        return mat
+        return np.reshape(m_x.expand(), dims, order="F")

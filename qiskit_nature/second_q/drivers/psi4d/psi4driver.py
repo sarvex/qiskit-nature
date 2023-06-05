@@ -105,7 +105,7 @@ class Psi4Driver(ElectronicStructureDriver):
         name = "".join(molecule.symbols)
         geom = "\n".join(
             [
-                name + " " + " ".join(map(str, coord))
+                f"{name} " + " ".join(map(str, coord))
                 for name, coord in zip(molecule.symbols, molecule.coords)
             ]
         )
@@ -125,9 +125,7 @@ class Psi4Driver(ElectronicStructureDriver):
         Returns:
             A driver acceptable basis.
         """
-        if basis == "sto3g":
-            return "sto-3g"
-        return basis
+        return "sto-3g" if basis == "sto3g" else basis
 
     @staticmethod
     def check_method_supported(method: MethodType) -> None:
@@ -173,7 +171,7 @@ class Psi4Driver(ElectronicStructureDriver):
             run_directory = os.getcwd()
             for local_file in os.listdir(run_directory):
                 if local_file.endswith(".clean"):
-                    os.remove(run_directory + "/" + local_file)
+                    os.remove(f"{run_directory}/{local_file}")
             try:
                 os.remove("timer.dat")
             except Exception:  # pylint: disable=broad-except

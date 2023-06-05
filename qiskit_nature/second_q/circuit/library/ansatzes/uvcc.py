@@ -339,13 +339,13 @@ class UVCC(EvolvedOperatorAnsatz):
         generators: list[Callable] = []
 
         if isinstance(self.excitations, str):
-            for exc in self.excitations:
-                generators.append(
-                    partial(
-                        generate_vibration_excitations,
-                        num_excitations=self._EXCITATION_TYPE[exc],
-                    )
+            generators.extend(
+                partial(
+                    generate_vibration_excitations,
+                    num_excitations=self._EXCITATION_TYPE[exc],
                 )
+                for exc in self.excitations
+            )
         elif isinstance(self.excitations, int):
             generators.append(
                 partial(
@@ -354,13 +354,13 @@ class UVCC(EvolvedOperatorAnsatz):
                 )
             )
         elif isinstance(self.excitations, list):
-            for exc in self.excitations:  # type: ignore
-                generators.append(
-                    partial(
-                        generate_vibration_excitations,
-                        num_excitations=exc,
-                    )
+            generators.extend(
+                partial(
+                    generate_vibration_excitations,
+                    num_excitations=exc,
                 )
+                for exc in self.excitations
+            )
         elif callable(self.excitations):
             generators = [self.excitations]
         else:
@@ -381,11 +381,14 @@ class UVCC(EvolvedOperatorAnsatz):
         operators = []
 
         for exc in excitations:
-            label = []
-            for occ in exc[0]:
-                label.append(f"+_{VibrationalOp.build_dual_index(self.num_modals, occ)}")
-            for unocc in exc[1]:
-                label.append(f"-_{VibrationalOp.build_dual_index(self.num_modals, unocc)}")
+            label = [
+                f"+_{VibrationalOp.build_dual_index(self.num_modals, occ)}"
+                for occ in exc[0]
+            ]
+            label.extend(
+                f"-_{VibrationalOp.build_dual_index(self.num_modals, unocc)}"
+                for unocc in exc[1]
+            )
             op = VibrationalOp({" ".join(label): 1}, self.num_modals)
             op -= op.adjoint()
             # we need to account for an additional imaginary phase in the exponent accumulated from

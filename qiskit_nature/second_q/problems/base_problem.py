@@ -74,7 +74,7 @@ class BaseProblem:
 
         aux_ops: dict[str, SparseLabelOp] = {}
         for prop in self.properties:
-            aux_ops.update(prop.second_q_ops())
+            aux_ops |= prop.second_q_ops()
 
         return main_op, aux_ops
 

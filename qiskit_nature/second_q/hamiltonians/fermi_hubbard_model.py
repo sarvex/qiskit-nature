@@ -106,6 +106,6 @@ class FermiHubbardModel(LatticeModel):
                 f"+_{index_up} -_{index_up} +_{index_down} -_{index_down}"
             ] = self._onsite_interaction
 
-        ham = {**kinetic_ham, **interaction_ham}
+        ham = kinetic_ham | interaction_ham
 
         return FermionicOp(ham, num_spin_orbitals=register_length, copy=False)

@@ -235,12 +235,14 @@ class PolynomialTensor(LinearMixin, GroupMixin, TolerancesMixin, Mapping):
     @property
     def register_length(self) -> int | None:
         """The size of the operator that can be generated from this ``PolynomialTensor``."""
-        for key in self._data:
-            if key == "":
-                continue
-            # TODO: remove unnecessary cast once settings.tensor_unwrapping is removed
-            return cast(Union[np.ndarray, SparseArray, Tensor], self[key]).shape[0]
-        return None
+        return next(
+            (
+                cast(Union[np.ndarray, SparseArray, Tensor], self[key]).shape[0]
+                for key in self._data
+                if key != ""
+            ),
+            None,
+        )
 
     def __repr__(self) -> str:
         data_str = f"{dict(self.items())}"
@@ -312,9 +314,9 @@ class PolynomialTensor(LinearMixin, GroupMixin, TolerancesMixin, Mapping):
             return self
 
         _optionals.HAS_SPARSE.require_now("SparseArray")
-        dense_dict: dict[str, Tensor] = {}
-        for key, value in self._data.items():
-            dense_dict[key] = value.to_dense()
+        dense_dict: dict[str, Tensor] = {
+            key: value.to_dense() for key, value in self._data.items()
+        }
         return PolynomialTensor(dense_dict, validate=False)
 
     # TODO: change the following type-hint if/when SparseArray dictates the existence of from_numpy
@@ -339,10 +341,10 @@ class PolynomialTensor(LinearMixin, GroupMixin, TolerancesMixin, Mapping):
         if self.is_sparse():
             return self
 
-        sparse_dict: dict[str, Tensor] = {}
-        for key, value in self._data.items():
-            sparse_dict[key] = value.to_sparse(sparse_type=sparse_type)
-
+        sparse_dict: dict[str, Tensor] = {
+            key: value.to_sparse(sparse_type=sparse_type)
+            for key, value in self._data.items()
+        }
         return PolynomialTensor(sparse_dict, validate=False)
 
     def _multiply(self, other: complex) -> PolynomialTensor:
@@ -360,10 +362,9 @@ class PolynomialTensor(LinearMixin, GroupMixin, TolerancesMixin, Mapping):
         if not isinstance(other, Number):
             raise TypeError(f"other {other} must be a number")
 
-        prod_dict: dict[str, Tensor] = {}
-        for key, matrix in self._data.items():
-            prod_dict[key] = other * matrix
-
+        prod_dict: dict[str, Tensor] = {
+            key: other * matrix for key, matrix in self._data.items()
+        }
         return PolynomialTensor(prod_dict, validate=False)
 
     def _add(self, other: PolynomialTensor, qargs=None) -> PolynomialTensor:
@@ -385,7 +386,7 @@ class PolynomialTensor(LinearMixin, GroupMixin, TolerancesMixin, Mapping):
 
         sum_dict = {key: value + other._data.get(key, 0) for key, value in self._data.items()}
         other_unique = {key: other._data[key] for key in other._data.keys() - self._data.keys()}
-        sum_dict.update(other_unique)
+        sum_dict |= other_unique
 
         return PolynomialTensor(sum_dict, validate=False)
 
@@ -494,11 +495,7 @@ class PolynomialTensor(LinearMixin, GroupMixin, TolerancesMixin, Mapping):
 
             outer = atensor.compose(btensor, qargs=qargs, front=True)
 
-            if new_key in new_data:
-                new_data[new_key] = new_data[new_key] + outer
-            else:
-                new_data[new_key] = outer
-
+            new_data[new_key] = new_data[new_key] + outer if new_key in new_data else outer
         return PolynomialTensor(new_data)
 
     def tensor(self, other: PolynomialTensor) -> PolynomialTensor:
@@ -621,9 +618,10 @@ class PolynomialTensor(LinearMixin, GroupMixin, TolerancesMixin, Mapping):
             A new ``PolynomialTensor`` instance with the resulting arrays.
         """
         common_keys = set.intersection(*(set(op) for op in operands))
-        new_data: dict[str, Tensor] = {}
-        for key in common_keys:
-            new_data[key] = cast(Tensor, function(*(op[key] for op in operands)))
+        new_data: dict[str, Tensor] = {
+            key: cast(Tensor, function(*(op[key] for op in operands)))
+            for key in common_keys
+        }
         return cls(new_data, validate=validate)
 
     @classmethod

@@ -208,7 +208,7 @@ class SparseLabelOp(LinearMixin, AdjointMixin, GroupMixin, TolerancesMixin, ABC,
 
         new_data = {key: value + other._data.get(key, 0) for key, value in self._data.items()}
         other_unique = {key: other._data[key] for key in other._data.keys() - self._data.keys()}
-        new_data.update(other_unique)
+        new_data |= other_unique
 
         return self._new_instance(new_data, other=other)
 
@@ -339,11 +339,10 @@ class SparseLabelOp(LinearMixin, AdjointMixin, GroupMixin, TolerancesMixin, ABC,
 
         atol = self.atol if atol is None else atol
         rtol = self.rtol if rtol is None else rtol
-        for key, value in self._data.items():
-            if not cmath.isclose(value, other._data[key], rel_tol=rtol, abs_tol=atol):
-                return False
-
-        return True
+        return all(
+            cmath.isclose(value, other._data[key], rel_tol=rtol, abs_tol=atol)
+            for key, value in self._data.items()
+        )
 
     def __eq__(self, other: object) -> bool:
         """Check exact equality of two ``SparseLabelOp`` instances
@@ -456,10 +455,7 @@ class SparseLabelOp(LinearMixin, AdjointMixin, GroupMixin, TolerancesMixin, ABC,
         return self._new_instance(new_op._data)
 
     def __pow__(self, power):
-        if power == 0:
-            return self.__class__.one()
-
-        return super().__pow__(power)
+        return self.__class__.one() if power == 0 else super().__pow__(power)
 
     def argsort(self, *, weight: bool = False) -> Sequence[str]:
         """Returns the keys which sort this operator.

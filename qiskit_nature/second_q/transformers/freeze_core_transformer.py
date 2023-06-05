@@ -124,24 +124,23 @@ class FreezeCoreTransformer(BaseTransformer):
         Returns:
             A new ``Hamiltonian`` instance.
         """
-        if isinstance(hamiltonian, ElectronicEnergy):
-            if self._active_basis is None:
-                raise QiskitNatureError(
-                    "In order to transform a standalone hamiltonian, you must first prepare the "
-                    "active space by calling the 'prepare_active_space' method of this transformer."
-                )
-            return _transform_electronic_energy(
-                hamiltonian,
-                self._density_total,
-                self._active_density,
-                self._active_basis,
-                self.__class__.__name__,
-            )
-        else:
+        if not isinstance(hamiltonian, ElectronicEnergy):
             raise NotImplementedError(
                 f"The hamiltonian of type, {type(hamiltonian)}, is not supported by this "
                 "transformer."
             )
+        if self._active_basis is None:
+            raise QiskitNatureError(
+                "In order to transform a standalone hamiltonian, you must first prepare the "
+                "active space by calling the 'prepare_active_space' method of this transformer."
+            )
+        return _transform_electronic_energy(
+            hamiltonian,
+            self._density_total,
+            self._active_density,
+            self._active_basis,
+            self.__class__.__name__,
+        )
 
     def transform(self, problem: BaseProblem) -> BaseProblem:
         """Transforms one :class:`~qiskit_nature.second_q.problems.BaseProblem` into another.
@@ -274,10 +273,11 @@ class FreezeCoreTransformer(BaseTransformer):
             inactive_orbs_idxs.extend(range(self.count_core_orbitals(molecule.symbols)))
         if self._remove_orbitals is not None:
             inactive_orbs_idxs.extend(self._remove_orbitals)
-        active_orbs_idxs = [
-            o for o in range(total_num_spatial_orbitals) if o not in inactive_orbs_idxs
+        return [
+            o
+            for o in range(total_num_spatial_orbitals)
+            if o not in inactive_orbs_idxs
         ]
-        return active_orbs_idxs
 
     def _get_active_density_component(
         self, total_density: ElectronicIntegrals

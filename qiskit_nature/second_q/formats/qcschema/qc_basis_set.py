@@ -93,17 +93,17 @@ class QCCenterData(_QCBase):
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> QCCenterData:
         electron_shells: Sequence[QCElectronShell] | None = None
-        if "electron_shells" in data.keys():
-            electron_shells = []
-            for shell in data.pop("electron_shells", []):
-                electron_shells.append(cast(QCElectronShell, QCElectronShell.from_dict(shell)))
-
+        if "electron_shells" in data:
+            electron_shells = [
+                cast(QCElectronShell, QCElectronShell.from_dict(shell))
+                for shell in data.pop("electron_shells", [])
+            ]
         ecp_potentials: Sequence[QCECPPotential] | None = None
-        if "ecp_potentials" in data.keys():
-            ecp_potentials = []
-            for ecp in data.pop("ecp_potentials", []):
-                ecp_potentials.append(cast(QCECPPotential, QCECPPotential.from_dict(ecp)))
-
+        if "ecp_potentials" in data:
+            ecp_potentials = [
+                cast(QCECPPotential, QCECPPotential.from_dict(ecp))
+                for ecp in data.pop("ecp_potentials", [])
+            ]
         return cls(**data, electron_shells=electron_shells, ecp_potentials=ecp_potentials)
 
     def to_hdf5(self, group: h5py.Group) -> None:
@@ -126,16 +126,16 @@ class QCCenterData(_QCBase):
     def _from_hdf5_group(cls, h5py_group: h5py.Group) -> QCCenterData:
         electron_shells: Sequence[QCElectronShell] | None = None
         if "electron_shells" in h5py_group.keys():
-            electron_shells = []
-            for shell in h5py_group["electron_shells"].values():
-                electron_shells.append(cast(QCElectronShell, QCElectronShell.from_hdf5(shell)))
-
+            electron_shells = [
+                cast(QCElectronShell, QCElectronShell.from_hdf5(shell))
+                for shell in h5py_group["electron_shells"].values()
+            ]
         ecp_potentials: Sequence[QCECPPotential] | None = None
         if "ecp_potentials" in h5py_group.keys():
-            ecp_potentials = []
-            for ecp in h5py_group["ecp_potentials"].values():
-                ecp_potentials.append(cast(QCECPPotential, QCECPPotential.from_hdf5(ecp)))
-
+            ecp_potentials = [
+                cast(QCECPPotential, QCECPPotential.from_hdf5(ecp))
+                for ecp in h5py_group["ecp_potentials"].values()
+            ]
         return cls(
             electron_shells=electron_shells,
             ecp_electrons=h5py_group.attrs.get("ecp_electrons", None),

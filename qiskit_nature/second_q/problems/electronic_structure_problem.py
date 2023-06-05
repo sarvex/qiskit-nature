@@ -159,16 +159,12 @@ class ElectronicStructureProblem(BaseProblem):
     @property
     def num_alpha(self) -> int | None:
         """The number of alpha-spin particles."""
-        if self.num_particles is None:
-            return None
-        return self.num_particles[0]
+        return None if self.num_particles is None else self.num_particles[0]
 
     @property
     def num_beta(self) -> int | None:
         """The number of beta-spin particles."""
-        if self.num_particles is None:
-            return None
-        return self.num_particles[1]
+        return None if self.num_particles is None else self.num_particles[1]
 
     @property
     def num_spin_orbitals(self) -> int | None:
@@ -327,9 +323,7 @@ class ElectronicStructureProblem(BaseProblem):
                 qubit_mapper=converter,
                 match_convert=False,
             )
-        sector = ElectronicStructureProblem._pick_sector(z2_symmetries, hf_bitstr)
-
-        return sector
+        return ElectronicStructureProblem._pick_sector(z2_symmetries, hf_bitstr)
 
     def _symmetry_sector_locator(
         self,
@@ -375,9 +369,7 @@ class ElectronicStructureProblem(BaseProblem):
             num_particles=num_particles,
             qubit_mapper=mapper,
         )
-        sector = ElectronicStructureProblem._pick_sector(z2_symmetries, hf_bitstr)
-
-        return sector
+        return ElectronicStructureProblem._pick_sector(z2_symmetries, hf_bitstr)
 
     @staticmethod
     def _pick_sector(

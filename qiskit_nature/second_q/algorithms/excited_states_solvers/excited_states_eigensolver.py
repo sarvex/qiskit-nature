@@ -184,5 +184,4 @@ class ExcitedStatesEigensolver(ExcitedStatesSolver):
         raw_es_result = self._solver.compute_eigenvalues(main_operator, aux_ops)  # type: ignore
 
         eigenstate_result = EigenstateResult.from_result(raw_es_result)
-        result = problem.interpret(eigenstate_result)
-        return result
+        return problem.interpret(eigenstate_result)

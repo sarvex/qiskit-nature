@@ -77,10 +77,10 @@ class QiskitNatureLogging:
         Returns:
             Dictionary mapping names to effective level
         """
-        name_levels: Dict[str, int] = {}
-        for name in names:
-            name_levels[name] = python_logging.getLogger(name).getEffectiveLevel()
-
+        name_levels: Dict[str, int] = {
+            name: python_logging.getLogger(name).getEffectiveLevel()
+            for name in names
+        }
         return name_levels
 
     def set_levels_for_names(

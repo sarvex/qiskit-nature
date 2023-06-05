@@ -162,14 +162,12 @@ class TestGroundStateEigensolverMapper(QiskitNatureTestCase):
 
     def _prepare_uccsd_hf(self, tapered_mapper):
         initial_state = HartreeFock(self.num_spatial_orbitals, self.num_particles, tapered_mapper)
-        ansatz = UCCSD(
+        return UCCSD(
             self.num_spatial_orbitals,
             self.num_particles,
             tapered_mapper,
             initial_state=initial_state,
         )
-
-        return ansatz
 
     def test_uccsd_hf(self):
         """uccsd hf test"""

@@ -248,7 +248,7 @@ class Lattice:
         for source_index in range(shape[0]):
             for target_index in range(source_index, shape[0]):
                 weight = interaction_matrix[source_index, target_index]
-                if not weight == 0.0:
+                if weight != 0.0:
                     graph.add_edge(source_index, target_index, weight)
         return cls(graph)
 
@@ -264,16 +264,13 @@ class Lattice:
         Returns:
             The adjacency matrix of the input graph.
         """
-        if weighted:
-            real_part = adjacency_matrix(self.graph, weight_fn=np.real)
-            imag_part = adjacency_matrix(self.graph, weight_fn=np.imag)
-            imag_part = np.triu(imag_part) - np.triu(imag_part).T
-            ad_mat = real_part + 1.0j * imag_part
+        if not weighted:
+            return adjacency_matrix(self.graph, weight_fn=lambda x: 1)
 
-        else:
-            ad_mat = adjacency_matrix(self.graph, weight_fn=lambda x: 1)
-
-        return ad_mat
+        real_part = adjacency_matrix(self.graph, weight_fn=np.real)
+        imag_part = adjacency_matrix(self.graph, weight_fn=np.imag)
+        imag_part = np.triu(imag_part) - np.triu(imag_part).T
+        return real_part + 1.0j * imag_part
 
     @staticmethod
     @_optionals.HAS_MATPLOTLIB.require_in_call

@@ -315,8 +315,7 @@ class ElectronicIntegrals(LinearMixin):
     @property
     def register_length(self) -> int | None:
         """The size of the operator that can be generated from these `ElectronicIntegrals`."""
-        alpha_length = self.alpha.register_length
-        return alpha_length
+        return self.alpha.register_length
 
     def __eq__(self, other: object) -> bool:
         """Check equality of first ElectronicIntegrals with other
@@ -329,14 +328,11 @@ class ElectronicIntegrals(LinearMixin):
         if not isinstance(other, ElectronicIntegrals):
             return False
 
-        if (
+        return (
             self.alpha == other.alpha
             and self.beta == other.beta
             and self.beta_alpha == other.beta_alpha
-        ):
-            return True
-
-        return False
+        )
 
     def equiv(self, other: object) -> bool:
         """Check equivalence of first ElectronicIntegrals with other
@@ -349,14 +345,13 @@ class ElectronicIntegrals(LinearMixin):
         if not isinstance(other, ElectronicIntegrals):
             return False
 
-        if (
-            self.alpha.equiv(other.alpha)
-            and self.beta.equiv(other.beta)
-            and self.beta_alpha.equiv(other.beta_alpha)
-        ):
-            return True
-
-        return False
+        return bool(
+            (
+                self.alpha.equiv(other.alpha)
+                and self.beta.equiv(other.beta)
+                and self.beta_alpha.equiv(other.beta_alpha)
+            )
+        )
 
     def _multiply(self, other: complex) -> ElectronicIntegrals:
         if not isinstance(other, Number):
@@ -546,15 +541,12 @@ class ElectronicIntegrals(LinearMixin):
 
         alpha = PolynomialTensor(alpha_dict, validate=validate)
 
-        beta = None
         beta_dict = {}
         if h1_b is not None:
             beta_dict["+-"] = h1_b
         if h2_bb is not None:
             beta_dict["++--"] = h2_bb
-        if beta_dict:
-            beta = PolynomialTensor(beta_dict, validate=validate)
-
+        beta = PolynomialTensor(beta_dict, validate=validate) if beta_dict else None
         beta_alpha = None
         if h2_ba is not None:
             beta_alpha = PolynomialTensor({"++--": h2_ba}, validate=validate)
@@ -606,9 +598,7 @@ class ElectronicIntegrals(LinearMixin):
             kron_two_body[ba_index] = 0.5
             kron_two_body[ab_index] = 0.5
 
-            tensor_blocked_spin_orbitals = PolynomialTensor.apply(np.kron, kron_tensor, self.alpha)
-            return tensor_blocked_spin_orbitals
-
+            return PolynomialTensor.apply(np.kron, kron_tensor, self.alpha)
         tensor_blocked_spin_orbitals = PolynomialTensor({})
         # pure alpha spin
         kron_one_body[(0, 0)] = 1

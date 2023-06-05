@@ -282,7 +282,6 @@ class HyperCubicLattice(Lattice):
                 theta = 2 * pi / size[0]
                 pos = {i: [np.cos(i * theta), np.sin(i * theta)] for i in range(size[0])}
         elif dim == 2:
-            pos = {}
             width = np.array([0.0, 0.0])
             for i in (0, 1):
                 if boundary_condition[i] == BoundaryCondition.PERIODIC:
@@ -290,6 +289,7 @@ class HyperCubicLattice(Lattice):
                     # when the boundary condition in the x-direction is periodic and vice versa.
                     # The width of the shift is fixed to 0.2.
                     width[(i + 1) % 2] = 0.2
+            pos = {}
             for index in range(np.prod(size)):
                 # maps an index to two-dimensional coordinate
                 # the positions are shifted so that the edges between boundaries can be seen

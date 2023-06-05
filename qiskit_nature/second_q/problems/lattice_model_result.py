@@ -55,22 +55,17 @@ class LatticeModelResult(EigenstateResult):
 
     def _formatted(self) -> List[str]:
         """Formatted result as a list of strings"""
-        lines = []
-        lines.append("=== GROUND STATE ===")
-        lines.append(" ")
-        lines.append(
-            "* Lattice ground state energy "
-            f": {np.round(self.computed_lattice_energies[0], self.formatting_precision)}"
-        )
-
+        lines = [
+            "=== GROUND STATE ===",
+            " ",
+            f"* Lattice ground state energy : {np.round(self.computed_lattice_energies[0], self.formatting_precision)}",
+        ]
         if self.computed_lattice_energies is not None and len(self.computed_lattice_energies) > 1:
-            lines.append(" ")
-            lines.append("=== EXCITED STATES ===")
-            lines.append(" ")
-
-            for idx, lattice_energy in enumerate(self.computed_lattice_energies[1:]):
-                lines.append(
-                    f"* {(idx + 1): 3d}: Lattice excited state energy: "
-                    f"{np.round(lattice_energy, self.formatting_precision)}"
+            lines.extend((" ", "=== EXCITED STATES ===", " "))
+            lines.extend(
+                f"* {idx + 1: 3d}: Lattice excited state energy: {np.round(lattice_energy, self.formatting_precision)}"
+                for idx, lattice_energy in enumerate(
+                    self.computed_lattice_energies[1:]
                 )
+            )
         return lines

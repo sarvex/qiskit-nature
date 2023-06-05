@@ -57,38 +57,38 @@ def _parse(fcidump: Path) -> FCIDump:
     #  \d*.\d+  number format
     pattern = r".*?([-+]?\d*\.\d+|[-+]?\d+),"
     # we parse the values in the order in which they are listed in Knowles1989
-    _norb = re.search("NORB" + pattern, metadata)
+    _norb = re.search(f"NORB{pattern}", metadata)
     if _norb is None:
         raise QiskitNatureError("The required NORB entry of the FCIDump format is missing!")
     norb = int(_norb.groups()[0])
     output["NORB"] = norb
-    _nelec = re.search("NELEC" + pattern, metadata)
+    _nelec = re.search(f"NELEC{pattern}", metadata)
     if _nelec is None:
         raise QiskitNatureError("The required NELEC entry of the FCIDump format is missing!")
     output["NELEC"] = int(_nelec.groups()[0])
     # the rest of these values may occur and are set to their defaults otherwise
-    _ms2 = re.search("MS2" + pattern, metadata)
+    _ms2 = re.search(f"MS2{pattern}", metadata)
     output["MS2"] = int(_ms2.groups()[0]) if _ms2 else 0
-    _isym = re.search("ISYM" + pattern, metadata)
+    _isym = re.search(f"ISYM{pattern}", metadata)
     output["ISYM"] = int(_isym.groups()[0]) if _isym else 1
     # ORBSYM holds a list, thus it requires a little different treatment
     _orbsym = re.search(r"ORBSYM.*?" + r"(\d+)," * norb, metadata)
     output["ORBSYM"] = [int(s) for s in _orbsym.groups()] if _orbsym else [1] * norb
-    _iprtim = re.search("IPRTIM" + pattern, metadata)
+    _iprtim = re.search(f"IPRTIM{pattern}", metadata)
     output["IPRTIM"] = int(_iprtim.groups()[0]) if _iprtim else -1
-    _int = re.search("INT" + pattern, metadata)
+    _int = re.search(f"INT{pattern}", metadata)
     output["INT"] = int(_int.groups()[0]) if _int else 5
-    _memory = re.search("MEMORY" + pattern, metadata)
+    _memory = re.search(f"MEMORY{pattern}", metadata)
     output["MEMORY"] = int(_memory.groups()[0]) if _memory else 10000
-    _core = re.search("CORE" + pattern, metadata)
+    _core = re.search(f"CORE{pattern}", metadata)
     output["CORE"] = float(_core.groups()[0]) if _core else 0.0
-    _maxit = re.search("MAXIT" + pattern, metadata)
+    _maxit = re.search(f"MAXIT{pattern}", metadata)
     output["MAXIT"] = int(_maxit.groups()[0]) if _maxit else 25
-    _thr = re.search("THR" + pattern, metadata)
+    _thr = re.search(f"THR{pattern}", metadata)
     output["THR"] = float(_thr.groups()[0]) if _thr else 1e-5
-    _thrres = re.search("THRRES" + pattern, metadata)
+    _thrres = re.search(f"THRRES{pattern}", metadata)
     output["THRRES"] = float(_thrres.groups()[0]) if _thrres else 0.1
-    _nroot = re.search("NROOT" + pattern, metadata)
+    _nroot = re.search(f"NROOT{pattern}", metadata)
     output["NROOT"] = int(_nroot.groups()[0]) if _nroot else 1
 
     # If the FCIDump file resulted from an unrestricted spin calculation the indices will label spin
@@ -146,27 +146,26 @@ def _parse(fcidump: Path) -> FCIDump:
             try:
                 s8_hijkl[i - 1, a - 1, j - 1, b - 1] = x  # type: ignore[assignment]
             except IndexError as ex:
-                if _uhf:
-                    try:
-                        # NOTE: we exploit the 4-fold symmetry here and greedily use j and b to
-                        # index the beta-spin
-                        s4_hijkl_ba[
-                            j - 1 - norb, b - 1 - norb, i - 1, a - 1
-                        ] = x  # type: ignore[assignment]
-                    except IndexError:
-                        try:
-                            s4_hijkl_ba[
-                                i - 1 - norb, a - 1 - norb, j - 1, b - 1
-                            ] = x  # type: ignore[assignment]
-                        except IndexError:
-                            s8_hijkl_bb[
-                                i - 1 - norb, a - 1 - norb, j - 1 - norb, b - 1 - norb
-                            ] = x  # type: ignore[assignment]
-                else:
+                if not _uhf:
                     raise QiskitNatureError(
                         "Unknown 2-electron integral indices encountered in " f"'{(i, a, j, b)}'"
                     ) from ex
 
+                try:
+                    # NOTE: we exploit the 4-fold symmetry here and greedily use j and b to
+                    # index the beta-spin
+                    s4_hijkl_ba[
+                        j - 1 - norb, b - 1 - norb, i - 1, a - 1
+                    ] = x  # type: ignore[assignment]
+                except IndexError:
+                    try:
+                        s4_hijkl_ba[
+                            i - 1 - norb, a - 1 - norb, j - 1, b - 1
+                        ] = x  # type: ignore[assignment]
+                    except IndexError:
+                        s8_hijkl_bb[
+                            i - 1 - norb, a - 1 - norb, j - 1 - norb, b - 1 - norb
+                        ] = x  # type: ignore[assignment]
     # complement the 1-body matrices by placing the upper-triangular values into the lower-triangle
     tril_indices = np.tril_indices_from(hij)
     hij[tril_indices] = hij.T[tril_indices]

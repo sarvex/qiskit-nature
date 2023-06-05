@@ -219,9 +219,9 @@ class FCIDump:
         """
         outpath = fcidump if isinstance(fcidump, Path) else Path(fcidump)
         # either all beta variables are None or all of them are not
-        if not all(h is None for h in [self.hij_b, self.hijkl_ba, self.hijkl_bb]) and not all(
+        if any(
             h is not None for h in [self.hij_b, self.hijkl_ba, self.hijkl_bb]
-        ):
+        ) and any(h is None for h in [self.hij_b, self.hijkl_ba, self.hijkl_bb]):
             raise QiskitNatureError("Invalid beta variables.")
         if set(self.hij.shape) != set(self.hijkl.shape):
             raise QiskitNatureError(
@@ -239,10 +239,10 @@ class FCIDump:
             outfile.write(f"&FCI NORB={norb:4d},NELEC={nelec:4d},MS2={ms2:4d},\n")
             if self.orbsym is None:
                 outfile.write(" ORBSYM=" + "1," * norb + ",\n")
-            else:
-                if len(self.orbsym) != norb:
-                    raise QiskitNatureError(f"Invalid number of orbitals {norb} {len(self.orbsym)}")
+            elif len(self.orbsym) == norb:
                 outfile.write(" ORBSYM=" + ",".join(str(o) for o in self.orbsym) + ",\n")
+            else:
+                raise QiskitNatureError(f"Invalid number of orbitals {norb} {len(self.orbsym)}")
             outfile.write(f" ISYM={self.isym:d},\n&END\n")
             # append 2e integrals
             _dump_2e_ints(self.hijkl, mos, outfile)

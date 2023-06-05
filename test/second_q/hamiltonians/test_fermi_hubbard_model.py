@@ -70,7 +70,7 @@ class TestFermiHubbardModel(QiskitNatureTestCase):
                 "+_4 -_4 +_5 -_5": 10.0,
             }
 
-            ham = {**hopping, **interaction}
+            ham = hopping | interaction
 
             self.assertEqual(FermionicOp(ham, num_spin_orbitals=6, copy=False), fhm.second_q_op())
 
@@ -137,7 +137,7 @@ class TestFermiHubbardModel(QiskitNatureTestCase):
                 "+_4 -_4 +_5 -_5": 10.0,
             }
 
-            ham = {**hopping, **interaction}
+            ham = hopping | interaction
 
             self.assertEqual(FermionicOp(ham, num_spin_orbitals=6, copy=False), fhm.second_q_op())
 
@@ -183,6 +183,6 @@ class TestFermiHubbardModel(QiskitNatureTestCase):
                 "+_4 -_4 +_5 -_5": onsite_interaction,
             }
 
-            ham = {**hopping, **interaction}
+            ham = hopping | interaction
 
             self.assertEqual(FermionicOp(ham, num_spin_orbitals=6, copy=False), fhm.second_q_op())

@@ -31,7 +31,7 @@ def _rows_are_orthonormal(mat: np.ndarray, rtol: float = 1e-5, atol: float = 1e-
 def _validate_transformation_matrix(
     mat: np.ndarray, rtol: float = 1e-5, atol: float = 1e-8
 ) -> None:
-    if not len(mat.shape) == 2:
+    if len(mat.shape) != 2:
         raise ValueError(
             "transformation_matrix must be a 2-dimensional array. "
             f"Instead, got shape {mat.shape}."

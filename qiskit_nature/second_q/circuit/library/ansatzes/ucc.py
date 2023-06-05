@@ -486,14 +486,14 @@ class UCC(EvolvedOperatorAnsatz):
         }
 
         if isinstance(self.excitations, str):
-            for exc in self.excitations:
-                generators.append(
-                    partial(
-                        generate_fermionic_excitations,
-                        num_excitations=self._EXCITATION_TYPE[exc],
-                        **extra_kwargs,
-                    )
+            generators.extend(
+                partial(
+                    generate_fermionic_excitations,
+                    num_excitations=self._EXCITATION_TYPE[exc],
+                    **extra_kwargs,
                 )
+                for exc in self.excitations
+            )
         elif isinstance(self.excitations, int):
             generators.append(
                 partial(
@@ -501,10 +501,14 @@ class UCC(EvolvedOperatorAnsatz):
                 )
             )
         elif isinstance(self.excitations, list):
-            for exc in self.excitations:  # type: ignore
-                generators.append(
-                    partial(generate_fermionic_excitations, num_excitations=exc, **extra_kwargs)
+            generators.extend(
+                partial(
+                    generate_fermionic_excitations,
+                    num_excitations=exc,
+                    **extra_kwargs
                 )
+                for exc in self.excitations
+            )
         elif callable(self.excitations):
             generators = [self.excitations]
         else:
@@ -566,11 +570,8 @@ class UCC(EvolvedOperatorAnsatz):
         operators = []
 
         for exc in excitations:
-            label = []
-            for occ in exc[0]:
-                label.append(f"+_{occ}")
-            for unocc in exc[1]:
-                label.append(f"-_{unocc}")
+            label = [f"+_{occ}" for occ in exc[0]]
+            label.extend(f"-_{unocc}" for unocc in exc[1])
             op = FermionicOp({" ".join(label): 1}, num_spin_orbitals=num_spin_orbitals)
             op_adj = op.adjoint()
             # we need to account for an additional imaginary phase in the exponent accumulated from

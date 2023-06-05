@@ -52,9 +52,7 @@ def run_g16(cfg: str) -> str:
         errmsg = ""
         if stdout is not None:
             lines = stdout.splitlines()
-            start = 0
-            if len(lines) > 10:
-                start = len(lines) - 10
+            start = len(lines) - 10 if len(lines) > 10 else 0
             for i in range(start, len(lines)):
                 logger.error(lines[i])
                 errmsg += lines[i] + "\n"

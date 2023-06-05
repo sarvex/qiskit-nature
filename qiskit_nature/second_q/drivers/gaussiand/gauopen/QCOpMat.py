@@ -135,18 +135,39 @@ import qcmatrixio as qcmio
 
 INPKW = "input"
 
-def _lenarray (d):
+def _lenarray(d):
   if len(d) == 5:
-    l = d[4]*qcmio.lind4(False,d[0],d[1],d[2],d[3],0,abs(d[0]),abs(d[1]),abs(d[2]),abs(d[3]))[0] + 1
+    return (d[4] * qcmio.lind4(
+        False,
+        d[0],
+        d[1],
+        d[2],
+        d[3],
+        0,
+        abs(d[0]),
+        abs(d[1]),
+        abs(d[2]),
+        abs(d[3]),
+    )[0] + 1)
   elif len(d) == 4:
-    l = qcmio.lind4(False,d[0],d[1],d[2],d[3],0,abs(d[0]),abs(d[1]),abs(d[2]),abs(d[3]))[0] + 1
+    return (qcmio.lind4(
+        False,
+        d[0],
+        d[1],
+        d[2],
+        d[3],
+        0,
+        abs(d[0]),
+        abs(d[1]),
+        abs(d[2]),
+        abs(d[3]),
+    )[0] + 1)
   elif len(d) == 3:
-    l = qcmio.lind3(False,d[0],d[1],d[2],0,abs(d[0]),abs(d[1]),abs(d[2]))[0] + 1
+    return qcmio.lind3(False,d[0],d[1],d[2],0,abs(d[0]),abs(d[1]),abs(d[2]))[0] + 1
   elif len(d) == 2:
-    l = qcmio.lind2(False,d[0],d[1],0,abs(d[0]),abs(d[1]))[0] + 1
+    return qcmio.lind2(False,d[0],d[1],0,abs(d[0]),abs(d[1]))[0] + 1
   else:
-    l = d[0]
-  return (l)
+    return d[0]
 
 def _makeindx (dimens,asym,args):
   if len(dimens) >= 5: return qcmio.lind5 (True,dimens[0],dimens[1],dimens[2],dimens[3],
@@ -169,48 +190,35 @@ def _makeindxc (dimens,asym,args):
   elif len(dimens) == 2: return qcmio.lind2 (True,dimens[0],dimens[1],asym,args[1]+1,args[0]+1)
   else:  return (args[0],1.0e0)
 
-def printlab (cbuf,ni,nr,nri,ntot,lenbuf,n1,n2,n3,n4,n5,asym,doinp=False,**kwargs):
+def printlab(cbuf,ni,nr,nri,ntot,lenbuf,n1,n2,n3,n4,n5,asym,doinp=False,**kwargs):
   if doinp: print(cbuf," = ",end=" ",**kwargs)
   else:
-    if asym: iasym = -1
-    else: iasym = 0
+    iasym = -1 if asym else 0
     print ("%-35s NI=%2d NR=%2d NRI=%1d NTot=%8d" % (cbuf,ni,nr,nri,ntot),end=" ",**kwargs)
     if lenbuf > 0: print ("LenBuf=%8d" % lenbuf,end=" ",**kwargs)
     print ("N=%6d%6d%6d%6d%6d AS=%2d" % (n1,n2,n3,n4,n5,iasym),**kwargs)
 
-def formatv (fwid,plusstr,pkstr,thresh,val):
-  if abs(val) < thresh: val1 = 0.0e0
-  else: val1 = val
+def formatv(fwid,plusstr,pkstr,thresh,val):
+  val1 = 0.0e0 if abs(val) < thresh else val
   str = (pkstr % val1).strip()
   if re.match("^-0\.0*$",str): str = str[1:]
   if str[0] != '-': str = plusstr + str
   str = str.replace('e','D')
   return (fwid % str)
 
-def formatx (fwid,plusstr,pkstr,thresh,val):
-  if type(val) == np.complex128 or type(val) == complex:
-    str1 = formatv (fwid," ",pkstr,0.0e0,val.real)
-    str2 = formatv (fwid,"+",pkstr,0.0e0,val.imag)
-    str = str1 + str2 + "i "
-  else:
-    str = formatv(fwid,plusstr,pkstr,thresh,val)
-  return(str)
+def formatx(fwid,plusstr,pkstr,thresh,val):
+  if type(val) not in [np.complex128, complex]:
+    return formatv(fwid,plusstr,pkstr,thresh,val)
+  str1 = formatv (fwid," ",pkstr,0.0e0,val.real)
+  str2 = formatv (fwid,"+",pkstr,0.0e0,val.imag)
+  return str1 + str2 + "i "
 
-def printpars (type,wid):
-  if (type == "i"):
-    if (wid == 1):
-      npl = 20
-      pkstr = "%4d"
-      fwid = "%4s"
-    elif (wid == 2):
-      npl = 10
-      pkstr = "%8d"
-      fwid = "%8s"
-    else:
-      npl = 5
-      pkstr = "%12d"
-      fwid = "%12s"
-  elif (type == "d"):
+def printpars(type,wid):
+  if type == "c":
+    npl = 5
+    pkstr = "%12.6f"
+    fwid = "%12s"
+  elif type == "d":
     if (wid == 1):
       npl = 10
       pkstr = "%12.6f"
@@ -227,10 +235,19 @@ def printpars (type,wid):
       npl = 5
       pkstr = "%12.6f"
       fwid = "%12s"
-  elif (type == "c"):
-    npl = 5
-    pkstr = "%12.6f"
-    fwid = "%12s"
+  elif type == "i":
+    if (wid == 1):
+      npl = 20
+      pkstr = "%4d"
+      fwid = "%4s"
+    elif (wid == 2):
+      npl = 10
+      pkstr = "%8d"
+      fwid = "%8s"
+    else:
+      npl = 5
+      pkstr = "%12d"
+      fwid = "%12s"
   else:
     print ("error",**kwargs)
     npl = 1
@@ -247,11 +264,10 @@ def doinpprt (label,x,doinp=False,**kwargs):
     print (xstr,**kwargs)
   return (doinp)
 
-def print1d (comp,type,wid,label,arr,doinp=False,**kwargs):
+def print1d(comp,type,wid,label,arr,doinp=False,**kwargs):
   if arr is None: return
   if doinpprt (label,arr,doinp=False,**kwargs): return
-  if (label != " "): labstr = "%6s=" % label
-  else: labstr = "  "
+  labstr = "%6s=" % label if (label != " ") else "  "
   npl,pkstr,fwid = printpars (type,wid)
   i = 0
   ndone = 0
@@ -265,13 +281,12 @@ def print1d (comp,type,wid,label,arr,doinp=False,**kwargs):
       if ndone == npl:
         print ("",**kwargs)
         ndone = 0
-    i = i + 1
+    i += 1
   if ndone > 0: print ("",**kwargs)
 
-def print2e (cbuf,n,r,doinp=False,**kwargs):
+def print2e(cbuf,n,r,doinp=False,**kwargs):
   if doinpprt (cbuf,r,doinp=False,**kwargs): return
-  if re.match("^REG",cbuf): lab = "Int"
-  else: lab = "R1"
+  lab = "Int" if re.match("^REG",cbuf) else "R1"
   if len(np.shape(r)) == 1:
     lr = np.shape(r)
     nr = 1
@@ -280,8 +295,7 @@ def print2e (cbuf,n,r,doinp=False,**kwargs):
   for i in range(n):
     for j in range(i+1):
       for k in range(i+1):
-        if i == k: llim = j + 1
-        else: llim = k + 1
+        llim = j + 1 if i == k else k + 1
         for l in range(llim):
           ijkl,sign = qcmio.lind4(False,-n,-n,-n,n,0,i+1,j+1,k+1,l+1)
           doit = False
@@ -299,10 +313,9 @@ def print2e (cbuf,n,r,doinp=False,**kwargs):
             str = str.replace("e","D")
             print (str,**kwargs)
 
-def ltout (label,n,x,key,im,doinp=False,**kwargs):
+def ltout(label,n,x,key,im,doinp=False,**kwargs):
   if doinpprt (label,x,doinp=False,**kwargs): return
-  if key > 0: thresh = 0.0e0
-  else:  thresh = 10.0e0**(key-6)
+  thresh = 0.0e0 if key > 0 else 10.0e0**(key-6)
   ntt = (n*(n+1))//2
   if im > 0:
     print ("%s, matrix %6d:" % (label,im),**kwargs)
@@ -322,17 +335,16 @@ def ltout (label,n,x,key,im,doinp=False,**kwargs):
       ir = min(irow-ist+1,nc)
       l = (irow*(irow+1))//2 + ist + imoff
       print ("%4d" % (irow+1),end="",**kwargs)
-      for i in range(ir):
+      for _ in range(ir):
         s = x[l]
         l = l + 1
         s = formatx ("%14s","","%14.6e",thresh,s)
         print (s,end="",**kwargs)
       print (**kwargs)
 
-def sqout (label,m,n,x,key,im,doinp=False,**kwargs):
+def sqout(label,m,n,x,key,im,doinp=False,**kwargs):
   if doinpprt (label,x,doinp=False,**kwargs): return
-  if key > 0: thresh = 0.0e0
-  else:  thresh = 10.0e0**(key-6)
+  thresh = 0.0e0 if key > 0 else 10.0e0**(key-6)
   if im > 0:
     print ("%s, matrix %6d:" % (label,im),**kwargs)
     imoff = (im-1)*m*n
@@ -364,7 +376,7 @@ def sqout (label,m,n,x,key,im,doinp=False,**kwargs):
 
 class OpMat (object):
 
-  def __init__ (self,name,array,nelem=1,type=None,asym=False,dimens=None):
+  def __init__(self,name,array,nelem=1,type=None,asym=False,dimens=None):
     if isinstance (name,str): self.name = name
     else: raise TypeError
     if isinstance (array,np.ndarray): self.array = array
@@ -379,8 +391,7 @@ class OpMat (object):
       else: raise TypeError
     elif not isinstance (type,str): raise TypeError
     else: self.type = type
-    if asym: self.asym = True
-    else: self.asym = False
+    self.asym = bool(asym)
     if dimens is None: self.dimens = (self.array.size/self.nelem,)
     elif not isinstance (dimens,tuple): raise TypeError
     else: self.dimens = dimens

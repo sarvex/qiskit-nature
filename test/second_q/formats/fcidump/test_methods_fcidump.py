@@ -51,8 +51,7 @@ class TestMethodsFCIDump(TestDriverMethods):
 
         gsc = GroundStateEigensolver(converter, solver)
 
-        result = gsc.solve(problem)
-        return result
+        return gsc.solve(problem)
 
     @data(True, False)
     def test_lih(self, use_symmetry_reduced_integrals: bool):

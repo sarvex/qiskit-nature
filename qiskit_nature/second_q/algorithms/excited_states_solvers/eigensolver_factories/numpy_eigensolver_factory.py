@@ -116,5 +116,4 @@ class NumPyEigensolverFactory(EigensolverFactory):
         if not filter_criterion and self._use_default_filter_criterion:
             filter_criterion = problem.get_default_filter_criterion()
 
-        npe = NumPyEigensolver(filter_criterion=filter_criterion, k=self.k)
-        return npe
+        return NumPyEigensolver(filter_criterion=filter_criterion, k=self.k)

@@ -81,12 +81,10 @@ def _unpack_args(sequence: Sequence) -> Sequence[ARRAY_TYPE | str]:
     for obj in sequence:
         if isinstance(obj, Tensor):
             seq.append(obj.array)
-        elif isinstance(obj, str):
+        elif isinstance(obj, str) or not isinstance(obj, Sequence):
             seq.append(obj)
-        elif isinstance(obj, Sequence):
-            seq.append(_unpack_args(obj))
         else:
-            seq.append(obj)
+            seq.append(_unpack_args(obj))
     return seq
 
 
@@ -141,10 +139,7 @@ class Tensor(np.lib.mixins.NDArrayOperatorsMixin, TolerancesMixin):
 
         See also https://numpy.org/doc/stable/reference/arrays.classes.html#numpy.class.__array__
         """
-        if dtype is None:
-            return self._array
-
-        return self._array.astype(dtype=dtype)
+        return self._array if dtype is None else self._array.astype(dtype=dtype)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """Makes this class work with numpy ufuncs.
@@ -152,20 +147,19 @@ class Tensor(np.lib.mixins.NDArrayOperatorsMixin, TolerancesMixin):
         See also
         https://numpy.org/doc/stable/reference/arrays.classes.html#numpy.class.__array_ufunc__
         """
-        if method == "__call__":
-            new_inputs = []
-            for i in inputs:
-                if isinstance(i, self.__class__):
-                    new_inputs.append(i._array)
-                else:
-                    new_inputs.append(i)
-            context = kwargs.pop("context", None)
-            ret = ufunc(*new_inputs, **kwargs)
-            if isinstance(ret, (np.ndarray, SparseArray)):
-                return self.__array_wrap__(ret, context)
-            return ret
-        else:
+        if method != "__call__":
             return NotImplemented
+        new_inputs = []
+        for i in inputs:
+            if isinstance(i, self.__class__):
+                new_inputs.append(i._array)
+            else:
+                new_inputs.append(i)
+        context = kwargs.pop("context", None)
+        ret = ufunc(*new_inputs, **kwargs)
+        if isinstance(ret, (np.ndarray, SparseArray)):
+            return self.__array_wrap__(ret, context)
+        return ret
 
     # pylint: disable=unused-argument
     def __array_function__(self, func, types, args, kwargs):
@@ -199,10 +193,7 @@ class Tensor(np.lib.mixins.NDArrayOperatorsMixin, TolerancesMixin):
 
     def __getitem__(self, key: Any) -> Any:
         array = self.__array__()
-        if hasattr(array, "__getitem__"):
-            # expose any item of the internally wrapped array object
-            return array.__getitem__(key)
-        return None
+        return array.__getitem__(key) if hasattr(array, "__getitem__") else None
 
     def __setitem__(self, key: Any, value: Any) -> None:
         array = self.__array__()
@@ -362,7 +353,7 @@ class Tensor(np.lib.mixins.NDArrayOperatorsMixin, TolerancesMixin):
             (int(label), idx) for idx, label in enumerate(re.findall(r"\d+", formatted))
         ]
         _, permutation = zip(*sorted(ordered_ints))
-        return list(seq[idx] for idx in permutation)
+        return [seq[idx] for idx in permutation]
 
     @_optionals.HAS_SPARSE.require_in_call
     def is_sparse(self) -> bool:
@@ -442,17 +433,12 @@ class Tensor(np.lib.mixins.NDArrayOperatorsMixin, TolerancesMixin):
                 if value.size != other_value.size:
                     return False
                 diff = value - other_value
-                if diff.nnz != 0:
-                    return False
-                return True
+                return diff.nnz == 0
             value = value.todense()  # type: ignore[union-attr]
         elif other_is_sparse:
             other_value = cast(SparseArray, other_value).todense()
 
-        if not np.array_equal(value, other_value):
-            return False
-
-        return True
+        return bool(np.array_equal(value, other_value))
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
@@ -489,22 +475,19 @@ class Tensor(np.lib.mixins.NDArrayOperatorsMixin, TolerancesMixin):
                 if value.ndim != other_value.ndim:
                     return False
                 diff = (value - other_value).todense()
-                if not np.allclose(
-                    diff,
-                    zeros_like(diff).todense(),
-                    atol=self.atol,
-                    rtol=self.rtol,
-                ):
-                    return False
-                return True
+                return bool(
+                    np.allclose(
+                        diff,
+                        zeros_like(diff).todense(),
+                        atol=self.atol,
+                        rtol=self.rtol,
+                    )
+                )
             value = value.todense()  # type: ignore[union-attr]
         elif other_is_sparse:
             other_value = cast(SparseArray, other_value).todense()
 
-        if not np.allclose(value, other_value, atol=self.atol, rtol=self.rtol):
-            return False
-
-        return True
+        return bool(np.allclose(value, other_value, atol=self.atol, rtol=self.rtol))
 
     def compose(self, other: Tensor, qargs: None = None, front: bool = False) -> Tensor:
         r"""Returns the matrix multiplication with another ``Tensor``.

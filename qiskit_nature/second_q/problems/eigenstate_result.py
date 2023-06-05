@@ -69,10 +69,7 @@ class EigenstateResult(AlgorithmResult):
     @property
     def groundstate(self) -> tuple[QuantumCircuit, Sequence[float] | None] | None:
         """Returns the lowest eigenstate."""
-        states = self.eigenstates
-        if states:
-            return states[0]
-        return None
+        return states[0] if (states := self.eigenstates) else None
 
     @classmethod
     def from_result(
@@ -184,8 +181,8 @@ class EigenstateResult(AlgorithmResult):
         aux_operators_evaluated: ListOrDict[tuple[complex, dict[str, Any]]]
     ) -> ListOrDict[complex]:
         aux_op_values: ListOrDict[complex]
-        if isinstance(aux_operators_evaluated, list):
-            aux_op_values = [val[0] for val in aux_operators_evaluated]
-        else:
-            aux_op_values = {key: val[0] for key, val in aux_operators_evaluated.items()}
-        return aux_op_values
+        return (
+            [val[0] for val in aux_operators_evaluated]
+            if isinstance(aux_operators_evaluated, list)
+            else {key: val[0] for key, val in aux_operators_evaluated.items()}
+        )

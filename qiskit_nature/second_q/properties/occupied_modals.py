@@ -54,11 +54,10 @@ class OccupiedModals:
         Returns:
             The operator to evaluate which modal of the given mode is occupied.
         """
-        labels: dict[str, complex] = {}
-
-        for modal in range(self.num_modals[mode]):
-            labels[f"+_{mode}_{modal} -_{mode}_{modal}"] = 1.0
-
+        labels: dict[str, complex] = {
+            f"+_{mode}_{modal} -_{mode}_{modal}": 1.0
+            for modal in range(self.num_modals[mode])
+        }
         return VibrationalOp(labels, self.num_modals)
 
     def interpret(

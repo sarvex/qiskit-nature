@@ -53,8 +53,7 @@ class TestDriverMethods(QiskitNatureTestCase):
 
         gsc = GroundStateEigensolver(converter, solver)
 
-        result = gsc.solve(problem)
-        return result
+        return gsc.solve(problem)
 
     def _assert_energy(self, result, mol):
         self.assertAlmostEqual(self.ref_energies[mol], result.total_energies[0], places=3)
