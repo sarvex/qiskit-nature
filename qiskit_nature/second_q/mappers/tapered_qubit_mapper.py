@@ -73,8 +73,7 @@ class TaperedQubitMapper(QubitMapper):
         mapped_op = self.mapper.map(second_q_op, register_length=register_length)
         if isinstance(mapped_op, PauliSumOp):
             mapped_op = mapped_op.primitive
-        converted_op = self.z2symmetries.convert_clifford(mapped_op)
-        return converted_op
+        return self.z2symmetries.convert_clifford(mapped_op)
 
     def _taper_clifford_single(self, converted_op: SparsePauliOp) -> SparsePauliOp:
         # Mappers do not apply symmetry reduction if the tapering values were not set to specify the
@@ -82,8 +81,7 @@ class TaperedQubitMapper(QubitMapper):
         if self.z2symmetries.tapering_values is None:
             return converted_op
         else:
-            tapered_op = cast(SparsePauliOp, self.z2symmetries.taper_clifford(converted_op))
-            return tapered_op
+            return cast(SparsePauliOp, self.z2symmetries.taper_clifford(converted_op))
 
     def _map_single(
         self, second_q_op: SparseLabelOp, *, register_length: int | None = None
@@ -122,11 +120,7 @@ class TaperedQubitMapper(QubitMapper):
                 second_q_op, register_length=register_length
             )
 
-        # NOTE: _ListOrDict.unwrap takes care of the conversion to/from PauliSumOp based on
-        # settings.use_pauli_sum_op
-        returned_ops = qubit_ops.unwrap(wrapped_type)
-
-        return returned_ops
+        return qubit_ops.unwrap(wrapped_type)
 
     def taper_clifford(
         self,
@@ -199,9 +193,7 @@ class TaperedQubitMapper(QubitMapper):
         # `check_commutes=True` is set. This is not done via `_map_single` because the correct
         # filtering of `None` values can only be done on the level of `taper_clifford`
         pauli_ops = self.map_clifford(second_q_ops, register_length=register_length)
-        # This choice of keyword arguments ensures that the output does not contain None.
-        tapered_ops = self.taper_clifford(pauli_ops, check_commutes=True, suppress_none=True)
-        return tapered_ops
+        return self.taper_clifford(pauli_ops, check_commutes=True, suppress_none=True)
 
     def _check_commutes(self, qubit_op: SparsePauliOp) -> bool:
         logger.debug("Checking operator commutes with symmetries:")

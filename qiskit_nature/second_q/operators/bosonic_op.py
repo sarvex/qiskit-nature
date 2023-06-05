@@ -338,13 +338,14 @@ class BosonicOp(SparseLabelOp):
         return new_op
 
     def transpose(self) -> BosonicOp:
-        data = {}
-
         trans = "".maketrans("+-", "-+")
 
-        for label, coeff in self.items():
-            data[" ".join(lbl.translate(trans) for lbl in reversed(label.split()))] = coeff
-
+        data = {
+            " ".join(
+                lbl.translate(trans) for lbl in reversed(label.split())
+            ): coeff
+            for label, coeff in self.items()
+        }
         return self._new_instance(data)
 
     def normal_order(self) -> BosonicOp:
@@ -565,9 +566,9 @@ class BosonicOp(SparseLabelOp):
                 ]
                 # Finally, remove the last occurrence
                 if occs[-1] + 4 < len(new_label):
-                    new_label = (new_label[0 : occs[-1]] + new_label[(occs[-1] + 4) :]).strip()
+                    new_label = (new_label[:occs[-1]] + new_label[(occs[-1] + 4) :]).strip()
                 else:
-                    new_label = (new_label[0 : occs[-1]]).strip()
+                    new_label = new_label[:occs[-1]].strip()
             # Then, update the operator_mapper dictionary
             # Creation operator (+) creates a new particle at that index, so we increase the value in
             # the dict by one. Annihilation operator (-) does the opposite

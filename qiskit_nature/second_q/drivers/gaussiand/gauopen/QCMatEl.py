@@ -286,18 +286,18 @@ def DimTuple (n1,n2,n3,n4,n5):
   elif n2 > 1: return (n1,n2)
   else: return((n1,))
 
-def optfile (namei,suffix="",retfd=True):
+def optfile(namei,suffix="",retfd=True):
   if namei is None:
     fi = tempfile.NamedTemporaryFile (mode='w+t',suffix=suffix,delete=False)
   else:
     fi = open (namei,"w+t")
-  if retfd: return (fi)
-  else:
-    name = fi.name
-    fi.close()
-    return (name)
+  if retfd:
+    if retfd: return (fi)
+  name = fi.name
+  fi.close()
+  return (name)
 
-def makegauinp (matfi, matfo, tinput=None, dofock=False, motran=None,
+def makegauinp(matfi, matfo, tinput=None, dofock=False, motran=None,
                 aotype=None, window=None, miscroute=None, model="HF",
                 symm="nosymm", haveorbs=True, basis="ChkBasis",
                 program="g16", revision="b01", progargs=[]):
@@ -314,13 +314,16 @@ def makegauinp (matfi, matfo, tinput=None, dofock=False, motran=None,
     fi.write (matfi+"\n")
   else:
     fi = io.StringIO()
-    if doi8: newpa.append ("-IM="+matfi)
-    else: newpa.append ("-IM4="+matfi)
-  fi.write ("#p "+model+" geom=allcheck " + basis + " test output=(matrix")
+    if doi8:
+      newpa.append(f"-IM={matfi}")
+    else:else
+      newpa.append(f"-IM4={matfi}")
+  fi.write(f"#p {model} geom=allcheck {basis} test output=(matrix")
   if not doi8: fi.write (",i4labels")
   if motran is not None: fi.write (",mo2el")
   fi.write (") ")
-  if symm != "": fi.write(symm+" ")
+  if symm != "":
+    fi.write(f"{symm} ")
   if dofock is False:
     if haveorbs: fi.write("guess=(copychk,only)")
     else: fi.write("guess=(*none*,only)")
@@ -331,39 +334,41 @@ def makegauinp (matfi, matfo, tinput=None, dofock=False, motran=None,
   else: raise TypeError
   if aotype is not None:
     fi.write(" scf=conventional ")
-    if aotype == 0 or aotype == "regular" or aotype == "noraff": fi.write ("noraff")
+    if aotype in [0, "regular", "noraff"]: fi.write ("noraff")
     else: fi.write ("int=raf%d" % aotype)
   if motran == "partial": fi.write(" tran=iabc")
   elif motran == "full": fi.write(" tran=full")
-  if window is not None: fi.write (" window="+str(window))
-  if miscroute is not None: fi.write (" "+miscroute)
+  if window is not None:
+    fi.write(f" window={str(window)}")
+  if miscroute is not None:
+    fi.write(f" {miscroute}")
   if revision is "a03":
     fi.write("\n\n"+matfo+"\n\n")
     itemp = fi.name
   else:
-    if doi8: newpa.append ("-OM="+matfo)
-    else: newpa.append ("-OM4="+matfo)
-    newpa.append ("-X="+fi.getvalue())
+    if doi8:
+      newpa.append(f"-OM={matfo}")
+    else:else
+      newpa.append(f"-OM4={matfo}")
+    newpa.append(f"-X={fi.getvalue()}")
     itemp = None
   fi.close()
   return (itemp,newpa)
 
-def rungau (matfi, matfo, program="g16", progargs=[], debug=False, toutput=None, **kwargs):
+def rungau(matfi, matfo, program="g16", progargs=[], debug=False, toutput=None, **kwargs):
   itemp,pargs = makegauinp (matfi,matfo,program=program,progargs=progargs,**kwargs)
   otemp = optfile (toutput,suffix=".log",retfd=False)
   try:
     unlink (matfo)
   except:
     pass
-  if itemp is None: fi = subprocess.DEVNULL
-  else: fi = open (itemp,mode="r")
-  fo = open (otemp,mode="w")
-  pargs.insert (0,program)
-  if debug: print ("rungau program",program,"progargs",pargs,"itemp",
-                   itemp,"otemp",otemp,file=sys.stderr)
-  subprocess.call(pargs,stdin=fi,stdout=fo)
-  if itemp is not None: fi.close()
-  fo.close()
+  fi = subprocess.DEVNULL if itemp is None else open (itemp,mode="r")
+  with open (otemp,mode="w") as fo:
+    pargs.insert (0,program)
+    if debug: print ("rungau program",program,"progargs",pargs,"itemp",
+                     itemp,"otemp",otemp,file=sys.stderr)
+    subprocess.call(pargs,stdin=fi,stdout=fo)
+    if itemp is not None: fi.close()
   return (itemp,otemp)
 
 class MatEl (object):
@@ -431,9 +436,9 @@ class MatEl (object):
   def scalars (self):  return self.__GSCAL
 
   @property
-  def nfrag (self):
-    if FRAGNAME in self.__MATLIST: return max (self.__MATLIST[FRAGNAME].array)
-    else:  return 0;
+  def nfrag(self):
+    return (max(self.__MATLIST[FRAGNAME].array)
+            if FRAGNAME in self.__MATLIST else 0)
 
   def addobj (self,obj):
     name = obj.name.upper()
@@ -446,21 +451,21 @@ class MatEl (object):
     if name in mat_names_synonyms: name = mat_names_synonyms[name]
     if name in self.__MATLIST: del self.__MATLIST[name]
 
-  def scalar (self,namei,*val):
+  def scalar(self,namei,*val):
     name = namei.upper()
     if name in scalar_synonyms: name = scalar_synonyms[name]
     assert name in scalar_names
-    if len(val) > 0: self.__GSCAL[scalar_names[name]] = val[0]
+    if val: self.__GSCAL[scalar_names[name]] = val[0]
     return (self.__GSCAL[scalar_names[name]])
 
   def set_scalars (self,**kwargs):
     for name in kwargs: self.scalar (name,kwargs[name])
 
-  def read (self,fname,check_status=False):
+  def read(self,fname,check_status=False):
     if self.__DEBUG: print ("read file",fname)
     self.unit,self.labfil,self.fversion,self.__NLAB,self.gversion,self.title, \
-      self.natoms,self.nbasis,self.nbsuse,self.icharg,self.multip,self.ne, \
-      self.__LEN12L,self.__LEN4L,self.iopcl,self.icgu = qcmio.open_read (fname)
+        self.natoms,self.nbasis,self.nbsuse,self.icharg,self.multip,self.ne, \
+        self.__LEN12L,self.__LEN4L,self.iopcl,self.icgu = qcmio.open_read (fname)
     if self.unit < 1:
       print ("failed to open matrix element file",fname," for reading.")
       raise IOError
@@ -468,17 +473,16 @@ class MatEl (object):
     self.gversion = self.gversion.rstrip().decode("utf-8")
     self.title = self.title.rstrip().decode("utf-8")
     self.ian,self.iattyp,self.atmchg,self.c,self.ibfatm,self.ibftyp,self.atmwgt, \
-      self.nfc,self.nfv,self.itran,self.idum9,self.nshlao,self.nprmao,\
-      self.nshldb,self.nprmdb,self.nbondtot = \
-      qcmio.rd_head (self.unit,self.__NLAB,self.natoms,self.nbasis)
+        self.nfc,self.nfv,self.itran,self.idum9,self.nshlao,self.nprmao,\
+        self.nshldb,self.nprmdb,self.nbondtot = \
+        qcmio.rd_head (self.unit,self.__NLAB,self.natoms,self.nbasis)
     gotone = True
-    while (gotone):
+    while gotone:
       cbuf,ni,nr,ntot,lenbuf,n1,n2,n3,n4,n5,asym,nri,eof = qcmio.rd_labl(self.unit,self.fversion)
       cbuf = cbuf.rstrip().decode("utf-8")
       gotone = not eof
-      if nri == 2: type = "c"
-      else: type = "d"
-      if (gotone): 
+      type = "c" if nri == 2 else "d"
+      if gotone: 
         dimens = DimTuple (n1,n2,n3,n4,n5)
         lr = qcmio.lenarr(n1,n2,n3,n4,n5)
         if (ni >= 1) and (nr == 0):
@@ -496,12 +500,10 @@ class MatEl (object):
           myobj = qco.OpMat (cbuf,arr,nelem=nr,dimens=dimens)
         elif (ni == 1):
           lnz,arr = qcmio.rd_rind(self.unit,nr,lr,ntot,lenbuf)
-          if nr == 1: arr = np.reshape(arr,(lr),order='F')
-          else: arr = arr.T
+          arr = np.reshape(arr,(lr),order='F') if nr == 1 else arr.T
           myobj = qco.OpMat (cbuf,arr,asym=asym,nelem=nr,dimens=dimens)
         else:
           raise IOError
-          qcmio.rd_skip (self.unit,ntot,lenbuf)
         if cbuf == GSNAME: self.__GSCAL = arr
         else: self.__MATLIST[cbuf] = myobj
     qcmio.close_matf (self.unit)

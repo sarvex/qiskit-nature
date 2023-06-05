@@ -158,16 +158,15 @@ class GaussianLogResult:
                     # If we found the match then for each line we want the contents until
                     # such point as it does not match anymore then we break out
                     const = re.match(pattern_constants, line)
-                    if const is not None:
-                        clist: list[Union[str, float]] = []
-                        for i in range(indices):
-                            clist.append(const.group(f"index{i + 1}"))
-                        for i in range(3):
-                            clist.append(float(const.group(f"const{i + 1}")))
-                        constants.append(tuple(clist))
-                    else:
+                    if const is None:
                         break  # End of matching lines
 
+                    clist: list[Union[str, float]] = []
+                    for i in range(indices):
+                        clist.append(const[f"index{i + 1}"])
+                    for i in range(3):
+                        clist.append(float(const[f"const{i + 1}"]))
+                    constants.append(tuple(clist))
         return constants
 
     @property
@@ -186,11 +185,7 @@ class GaussianLogResult:
         h_nums = []
         a_nums = []
         for line in self._log:
-            if not found_section:
-                if re.search(r"Input/Output\sinformation", line) is not None:
-                    logger.debug(line)
-                    found_section = True
-            else:
+            if found_section:
                 if re.search(r"\s+\(H\)\s+\|", line) is not None:
                     logger.debug(line)
                     found_h = True
@@ -205,6 +200,9 @@ class GaussianLogResult:
                         a2h[a_num] = int(h_nums[i])
                     break
 
+            elif re.search(r"Input/Output\sinformation", line) is not None:
+                logger.debug(line)
+                found_section = True
         return a2h
 
     # ----------------------------------------------------------------------------------------
@@ -232,7 +230,7 @@ class GaussianLogResult:
         # There are 3 float entries in the list at the end, the other entries up
         # front are the indices (string type).
         num_indices = len(entry) - 3
-        return [a2h_vals + 1 - a2h[cast(str, x)] for x in entry[0:num_indices]]
+        return [a2h_vals + 1 - a2h[cast(str, x)] for x in entry[:num_indices]]
 
     def _force_constants_array(
         self,
@@ -245,8 +243,7 @@ class GaussianLogResult:
         max_index = -1
 
         for entry in force_constants:
-            indices = self._process_entry_indices(list(entry))
-            if indices:
+            if indices := self._process_entry_indices(list(entry)):
                 max_index = max(max_index, *set(indices))
                 fac = factor
                 fac *= self._multinomial(indices) if normalize else 1.0
@@ -277,27 +274,24 @@ class GaussianLogResult:
         max_index = max(quadratic_max_index, cubic_max_index, quartic_max_index)
 
         if _optionals.HAS_SPARSE:
-            watson = WatsonHamiltonian(
+            return WatsonHamiltonian(
                 as_coo(quadratic_data, shape=(max_index,) * 2),
                 as_coo(cubic_data, shape=(max_index,) * 3),
                 as_coo(quartic_data, shape=(max_index,) * 4),
                 -as_coo(quadratic_data, shape=(max_index,) * 2),
             )
-        else:
-            quadratic_numpy = np.zeros((max_index,) * 2)
-            for coord, value in quadratic_data.items():
-                quadratic_numpy[coord] = value
-            cubic_numpy = np.zeros((max_index,) * 3)
-            for coord, value in cubic_data.items():
-                cubic_numpy[coord] = value
-            quartic_numpy = np.zeros((max_index,) * 4)
-            for coord, value in quartic_data.items():
-                quartic_numpy[coord] = value
-            watson = WatsonHamiltonian(
-                quadratic_numpy,
-                cubic_numpy,
-                quartic_numpy,
-                -quadratic_numpy,
-            )
-
-        return watson
+        quadratic_numpy = np.zeros((max_index,) * 2)
+        for coord, value in quadratic_data.items():
+            quadratic_numpy[coord] = value
+        cubic_numpy = np.zeros((max_index,) * 3)
+        for coord, value in cubic_data.items():
+            cubic_numpy[coord] = value
+        quartic_numpy = np.zeros((max_index,) * 4)
+        for coord, value in quartic_data.items():
+            quartic_numpy[coord] = value
+        return WatsonHamiltonian(
+            quadratic_numpy,
+            cubic_numpy,
+            quartic_numpy,
+            -quadratic_numpy,
+        )

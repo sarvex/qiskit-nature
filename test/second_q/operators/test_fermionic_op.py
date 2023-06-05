@@ -372,7 +372,7 @@ class TestFermionicOp(QiskitNatureTestCase):
                 # make sure the ground state has support only in the 2-particle subspace
                 groundstate = evecs[:, np.argmin(evals)]
                 for idx in np.where(~np.isclose(groundstate, 0))[0]:
-                    binary = f"{idx:0{4}b}"
+                    binary = f"{idx:04b}"
                     self.assertEqual(binary.count("1"), 2)
 
             with self.subTest("parameters"):

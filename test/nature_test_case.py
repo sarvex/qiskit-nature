@@ -128,7 +128,7 @@ class QiskitNatureTestCase(unittest.TestCase, ABC):
         ):
             if lbl1 != lbl2 or not math.isclose(coeff1.real, coeff2.real, rel_tol=1e-05):
                 msg = f"labels: {lbl1}, {lbl2} != coefficients: {coeff1.real}. {coeff2.real}"
-                if len(message) > 0:
+                if message != "":
                     msg = f"{msg} : {message}"
 
                 raise AssertionError(msg)
@@ -151,7 +151,7 @@ class QiskitNatureTestCase(unittest.TestCase, ABC):
             return
 
         msg = f"{expected} == {observed}"
-        if len(message) > 0:
+        if message != "":
             msg = f"{msg} : {message}"
         raise AssertionError(msg)
 

@@ -70,10 +70,16 @@ class VibrationalIntegrals(PolynomialTensor):
         """
         if _optionals.HAS_SPARSE:
             max_n_body = max(len(key) for key in integrals) // 3
-            ret = cls(
+            return cls(
                 {
                     ("_+-" * n_body): Tensor(
-                        as_coo({k: v for k, v in integrals.items() if len(k) == 3 * n_body}),
+                        as_coo(
+                            {
+                                k: v
+                                for k, v in integrals.items()
+                                if len(k) == 3 * n_body
+                            }
+                        ),
                         label_template=" ".join(["{}_{{}}_{{}}"] * n_body * 2),
                     )
                     for n_body in range(1, max_n_body + 1)
@@ -106,8 +112,7 @@ class VibrationalIntegrals(PolynomialTensor):
                 data[data_key] = Tensor(
                     numpy_arr, label_template=" ".join(["{}_{{}}_{{}}"] * n_body * 2)
                 )
-            ret = cls(data, validate=False)
-        return ret
+            return cls(data, validate=False)
 
     @property
     def register_length(self) -> int | None:

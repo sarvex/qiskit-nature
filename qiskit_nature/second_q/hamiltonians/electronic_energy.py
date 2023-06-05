@@ -277,10 +277,9 @@ class ElectronicEnergy(Hamiltonian):
             two_body_aa = Tensor(two_body_aa)
 
         einsum = f"{''.join(two_body_aa._reverse_label_template('pqrs'))},qs->pr"
-        exchange = ElectronicIntegrals.einsum(
+        return ElectronicIntegrals.einsum(
             {einsum: ("++--", "+-", "+-")}, self.electronic_integrals, density
         )
-        return exchange
 
     def fock(self, density: ElectronicIntegrals) -> ElectronicIntegrals:
         r"""Computes the Fock operator for the given reduced density matrix.

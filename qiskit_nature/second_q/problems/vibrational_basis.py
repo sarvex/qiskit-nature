@@ -107,9 +107,10 @@ class VibrationalBasis(ABC):
         # we generate the list of all possible modal permutations (lower triangular indices) for all
         # involved modes: each entry in this list is a list of tuples of the form:
         #   (mode_index, modal_index_1, modal_index_2)
-        index_list = list(
-            zip(cycle([mode]), *np.tril_indices(self.num_modals[mode - 1])) for mode in powers
-        )
+        index_list = [
+            zip(cycle([mode]), *np.tril_indices(self.num_modals[mode - 1]))
+            for mode in powers
+        ]
 
         # now we can iterate the product of all index lists (the cartesian product is equivalent to
         # nested for loops but has the benefit of being agnostic w.r.t. the number of body terms)

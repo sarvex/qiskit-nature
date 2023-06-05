@@ -191,15 +191,14 @@ class ActiveSpaceTransformer(BaseTransformer):
                 str(self._num_electrons),
             )
 
-        if isinstance(self._num_spatial_orbitals, (int, np.integer)):
-            if self._num_spatial_orbitals < 0:
-                raise QiskitNatureError(
-                    "The number of active orbitals cannot be negative, not:",
-                    str(self._num_spatial_orbitals),
-                )
-        else:
+        if not isinstance(self._num_spatial_orbitals, (int, np.integer)):
             raise QiskitNatureError(
                 "The number of active orbitals must be an int, not:",
+                str(self._num_spatial_orbitals),
+            )
+        if self._num_spatial_orbitals < 0:
+            raise QiskitNatureError(
+                "The number of active orbitals cannot be negative, not:",
                 str(self._num_spatial_orbitals),
             )
 
@@ -417,8 +416,7 @@ class ActiveSpaceTransformer(BaseTransformer):
         self._validate_num_orbitals(nelec_inactive, total_num_spatial_orbitals)
 
         norbs_inactive = nelec_inactive // 2
-        active_orbs_idxs = list(range(norbs_inactive, norbs_inactive + self._num_spatial_orbitals))
-        return active_orbs_idxs
+        return list(range(norbs_inactive, norbs_inactive + self._num_spatial_orbitals))
 
     def _validate_num_electrons(self, nelec_inactive: int) -> None:
         """Validates the number of electrons.
@@ -473,26 +471,25 @@ class ActiveSpaceTransformer(BaseTransformer):
         Returns:
             A new ``Hamiltonian`` instance.
         """
-        if isinstance(hamiltonian, ElectronicEnergy):
-            if self._active_basis is None:
-                raise QiskitNatureError(
-                    "In order to transform a standalone hamiltonian, you must first prepare the "
-                    "active space by calling the 'prepare_active_space' method of this transformer."
-                )
-            return _transform_electronic_energy(
-                hamiltonian,
-                self._density_total,
-                self._active_density,
-                self._active_basis,
-                self.__class__.__name__,
-                reference_inactive_fock=self.reference_inactive_fock,
-                reference_inactive_energy=self.reference_inactive_energy,
-            )
-        else:
+        if not isinstance(hamiltonian, ElectronicEnergy):
             raise NotImplementedError(
                 f"The hamiltonian of type, {type(hamiltonian)}, is not supported by this "
                 "transformer."
             )
+        if self._active_basis is None:
+            raise QiskitNatureError(
+                "In order to transform a standalone hamiltonian, you must first prepare the "
+                "active space by calling the 'prepare_active_space' method of this transformer."
+            )
+        return _transform_electronic_energy(
+            hamiltonian,
+            self._density_total,
+            self._active_density,
+            self._active_basis,
+            self.__class__.__name__,
+            reference_inactive_fock=self.reference_inactive_fock,
+            reference_inactive_energy=self.reference_inactive_energy,
+        )
 
     def get_active_density_component(
         self, total_density: ElectronicIntegrals

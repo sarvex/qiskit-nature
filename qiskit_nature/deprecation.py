@@ -351,7 +351,7 @@ def deprecate_positional_arguments(
                         "than 3 months after the release. Instead use it as a keyword argument"
                     )
                     if additional_msg:
-                        msg += f"{additional_msg}" + "."
+                        msg += f"{additional_msg}."
 
                     warnings.warn(msg, DeprecationWarning, stack_level)
             return func(**kwargs)

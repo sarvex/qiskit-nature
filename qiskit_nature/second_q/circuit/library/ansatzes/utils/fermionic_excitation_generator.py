@@ -208,16 +208,12 @@ def generate_fermionic_excitations(
             )
 
             def reorder_index(index: int) -> int:
-                # Alpha spins already at correct index
                 if index < num_particles[0]:
                     return index
-                # Cyclically permute remaining (num_spin_orbitals - num_particles[0]) orbitals to
-                # get Beta spins at correct index
-                else:
-                    offset = num_particles[0]
-                    period = num_spin_orbitals - offset
-                    shift = num_spatial_orbitals - offset
-                    return (index - offset + shift) % period + offset
+                offset = num_particles[0]
+                period = num_spin_orbitals - offset
+                shift = num_spatial_orbitals - offset
+                return (index - offset + shift) % period + offset
 
             for (occ_idx, unocc_idx) in single_excitations:
                 # we map from interleaved to blocked spin orbital indices

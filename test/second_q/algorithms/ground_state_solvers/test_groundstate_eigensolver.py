@@ -162,14 +162,12 @@ class TestGroundStateEigensolver(QiskitNatureTestCase):
 
     def _prepare_uccsd_hf(self, qubit_converter):
         initial_state = HartreeFock(self.num_spatial_orbitals, self.num_particles, qubit_converter)
-        ansatz = UCCSD(
+        return UCCSD(
             self.num_spatial_orbitals,
             self.num_particles,
             qubit_converter,
             initial_state=initial_state,
         )
-
-        return ansatz
 
     def test_uccsd_hf(self):
         """uccsd hf test"""

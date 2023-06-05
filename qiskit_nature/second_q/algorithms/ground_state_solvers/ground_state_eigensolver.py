@@ -98,8 +98,7 @@ class GroundStateEigensolver(GroundStateSolver):
         )
 
         eigenstate_result = EigenstateResult.from_result(raw_mes_result)
-        result = problem.interpret(eigenstate_result)
-        return result
+        return problem.interpret(eigenstate_result)
 
     def get_qubit_operators(
         self,

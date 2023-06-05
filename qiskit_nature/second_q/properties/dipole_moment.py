@@ -123,8 +123,11 @@ class ElectronicDipoleMoment:
         Returns:
             A mapping of strings to `FermionicOp` objects.
         """
-        ops = {}
-        ops["XDipole"] = FermionicOp.from_polynomial_tensor(self.x_dipole.second_q_coeffs())
+        ops = {
+            "XDipole": FermionicOp.from_polynomial_tensor(
+                self.x_dipole.second_q_coeffs()
+            )
+        }
         ops["YDipole"] = FermionicOp.from_polynomial_tensor(self.y_dipole.second_q_coeffs())
         ops["ZDipole"] = FermionicOp.from_polynomial_tensor(self.z_dipole.second_q_coeffs())
         return ops

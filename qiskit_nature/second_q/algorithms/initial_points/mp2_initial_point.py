@@ -242,7 +242,7 @@ class MP2InitialPoint(InitialPoint):
     @threshold.setter
     def threshold(self, threshold: float) -> None:
         try:
-            threshold = abs(float(threshold))
+            threshold = abs(threshold)
         except TypeError:
             threshold = 0.0
 

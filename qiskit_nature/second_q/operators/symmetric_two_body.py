@@ -160,10 +160,7 @@ class SymmetricTwoBodyIntegrals(Tensor, ABC):
             return fold(self._numpy_function_via_s1(func, types, args, kwargs))
 
     def _numpy_function_via_s1(self, func, types, args, kwargs):
-        uses_sparse = True
-        if func is np.einsum:
-            # TODO: figure out why not even opt_einsum can handle this case consistently
-            uses_sparse = False
+        uses_sparse = func is not np.einsum
         new_args = []
         for a in args:
             if isinstance(a, SymmetricTwoBodyIntegrals):
@@ -397,8 +394,7 @@ class S8Integrals(SymmetricTwoBodyIntegrals):
         kl = k * (k + 1) // 2 + l
         if ij < kl:
             ij, kl = kl, ij
-        ijkl = ij * (ij + 1) // 2 + kl
-        return ijkl
+        return ij * (ij + 1) // 2 + kl
 
     def __getitem__(self, key: Any) -> Any:
         if isinstance(key, tuple) and len(key) == 4:

@@ -120,7 +120,7 @@ class GaussianForcesDriver(VibrationalStructureDriver):
         name = "".join(molecule.symbols)
         geom = "\n".join(
             [
-                name + " " + " ".join(map(str, coord))
+                f"{name} " + " ".join(map(str, coord))
                 for (name, coord) in zip(molecule.symbols, molecule.coords)
             ]
         )
@@ -139,9 +139,7 @@ class GaussianForcesDriver(VibrationalStructureDriver):
         Returns:
             A driver acceptable basis.
         """
-        if basis == "sto3g":
-            return "sto-3g"
-        return basis
+        return "sto-3g" if basis == "sto3g" else basis
 
     def run(self, basis: VibrationalBasis) -> VibrationalStructureProblem:  # type: ignore[override]
         # pylint: disable=arguments-differ
@@ -152,5 +150,4 @@ class GaussianForcesDriver(VibrationalStructureDriver):
 
         watson = glr.get_watson_hamiltonian(normalize=self._normalize)
 
-        problem = watson_to_problem(watson, basis=basis)
-        return problem
+        return watson_to_problem(watson, basis=basis)

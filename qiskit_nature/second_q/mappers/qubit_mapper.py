@@ -108,9 +108,7 @@ class _ListOrDict(Dict, Iterable, Generic[T]):
                 if issubclass(current_type, PauliSumOp):
                     return qubit_op
                 return PauliSumOp(qubit_op)
-            if issubclass(current_type, PauliSumOp):
-                return qubit_op.primitive
-            return qubit_op
+            return qubit_op.primitive if issubclass(current_type, PauliSumOp) else qubit_op
 
         if wrapped_type == list:
             if suppress_none:
@@ -187,10 +185,7 @@ class QubitMapper(ABC):
         for name, second_q_op in iter(wrapped_second_q_ops):
             qubit_ops[name] = self._map_single(second_q_op, register_length=register_length)
 
-        returned_ops = qubit_ops.unwrap(wrapped_type)
-        # Note the output of the mapping will never be None for standard mappers other than the
-        # TaperedQubitMapper.
-        return returned_ops
+        return qubit_ops.unwrap(wrapped_type)
 
     @classmethod
     @deprecate_arguments("0.6.0", {"nmodes": "register_length"})

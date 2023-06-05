@@ -418,19 +418,17 @@ class FermionicOp(SparseLabelOp):
             dtype=complex,
         )
 
-        if sparse:
-            return sparse_mat
-        else:
-            return sparse_mat.toarray()
+        return sparse_mat if sparse else sparse_mat.toarray()
 
     def transpose(self) -> FermionicOp:
-        data = {}
-
         trans = "".maketrans("+-", "-+")
 
-        for label, coeff in self.items():
-            data[" ".join(lbl.translate(trans) for lbl in reversed(label.split()))] = coeff
-
+        data = {
+            " ".join(
+                lbl.translate(trans) for lbl in reversed(label.split())
+            ): coeff
+            for label, coeff in self.items()
+        }
         return self._new_instance(data)
 
     def normal_order(self) -> FermionicOp:

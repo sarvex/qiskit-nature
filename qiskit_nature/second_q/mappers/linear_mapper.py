@@ -53,7 +53,7 @@ class LinearMapper(SpinMapper):
                     mat[idx] = identity
                 mat[idx] = mat[idx] @ char_map[op]
 
-            operatorlist = [mat[i] if i in mat else identity for i in range(register_length)]
+            operatorlist = [mat.get(i, identity) for i in range(register_length)]
             # Now, we can tensor all operators in this list
             qubit_ops_list.append(coeff * reduce(operator.xor, reversed(operatorlist)))
 

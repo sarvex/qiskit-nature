@@ -87,7 +87,7 @@ class QCTopology(_QCBase):
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> QCTopology:
         provenance: QCProvenance | None = None
-        if "provenance" in data.keys():
+        if "provenance" in data:
             provenance = cast(QCProvenance, QCProvenance.from_dict(data.pop("provenance")))
         return cls(**data, provenance=provenance)
 

@@ -123,9 +123,7 @@ class TriangularLattice(Lattice):
             node_a = rows * cols - 1
             node_b = 0  # node_b < node_a
             list_of_edges.append((node_b, node_a, edge_parameter[2].conjugate()))
-        elif boundary_condition == BoundaryCondition.OPEN:
-            pass
-        else:
+        elif boundary_condition != BoundaryCondition.OPEN:
             raise ValueError(
                 f"Invalid `boundary condition` {boundary_condition} is given."
                 "`boundary condition` must be " + " or ".join(str(bc) for bc in BoundaryCondition)
@@ -142,12 +140,7 @@ class TriangularLattice(Lattice):
         size = self.size
         boundary_condition = self.boundary_condition
         pos = {}
-        width = 0.0
-        if boundary_condition == BoundaryCondition.PERIODIC:
-            # the positions are shifted along the x- and y-direction
-            # when the boundary condition is periodic.
-            # The width of the shift is fixed to 0.2.
-            width = 0.2
+        width = 0.2 if boundary_condition == BoundaryCondition.PERIODIC else 0.0
         for index in range(np.prod(size)):
             # maps an index to two-dimensional coordinate
             # the positions are shifted so that the edges between boundaries can be seen

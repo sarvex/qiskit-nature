@@ -240,11 +240,12 @@ class PySCFDriver(ElectronicStructureDriver):
     @xcf_library.setter
     def xcf_library(self, xcf_library: str) -> None:
         """Sets the Exchange-Correlation functional library."""
-        if xcf_library not in ("libxc", "xcfun"):
+        if xcf_library in {"libxc", "xcfun"}:
+            self._xcf_library = xcf_library
+        else:
             raise QiskitNatureError(
                 "Invalid XCF library. It can be either 'libxc' or 'xcfun', not " f"'{xcf_library}'"
             )
-        self._xcf_library = xcf_library
 
     @property
     def conv_tol(self) -> float:
@@ -440,21 +441,21 @@ class PySCFDriver(ElectronicStructureDriver):
         from pyscf import gto
 
         atoms = [x.strip() for x in val.split(";")]
-        if atoms is None or len(atoms) < 1:
-            raise QiskitNatureError("Molecule format error: " + val)
+        if atoms is None or not atoms:
+            raise QiskitNatureError(f"Molecule format error: {val}")
 
         # An xyz format has 4 parts in each atom, if not then do zmatrix convert
         # Allows dummy atoms, using symbol 'X' in zmatrix format for coord computation to xyz
         parts = [x.strip() for x in atoms[0].split()]
         if len(parts) != 4:
             try:
-                newval = []
-                for entry in gto.mole.from_zmatrix(val):
-                    if entry[0].upper() != "X":
-                        newval.append(entry)
-                return newval
+                return [
+                    entry
+                    for entry in gto.mole.from_zmatrix(val)
+                    if entry[0].upper() != "X"
+                ]
             except Exception as exc:
-                raise QiskitNatureError("Failed to convert atom string: " + val) from exc
+                raise QiskitNatureError(f"Failed to convert atom string: {val}") from exc
 
         return val
 
@@ -537,7 +538,6 @@ class PySCFDriver(ElectronicStructureDriver):
         if data.mo_coeff_b is not None:
             data.hij_mo_b = np.dot(np.dot(data.mo_coeff_b.T, data.hij), data.mo_coeff_b)
 
-        einsum_ao_to_mo = "pqrs,pi,qj,rk,sl->ijkl"
         if settings.use_symmetry_reduced_integrals:
             data.eri = self._mol.intor("int2e", aosym=8)
             data.eri_mo = fold(ao2mo.full(self._mol, data.mo_coeff, aosym=4))
@@ -552,6 +552,7 @@ class PySCFDriver(ElectronicStructureDriver):
                 )
         else:
             data.eri = self._mol.intor("int2e", aosym=1)
+            einsum_ao_to_mo = "pqrs,pi,qj,rk,sl->ijkl"
             data.eri_mo = einsum_func(
                 einsum_ao_to_mo,
                 data.eri,

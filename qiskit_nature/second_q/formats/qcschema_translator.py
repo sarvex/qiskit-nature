@@ -159,9 +159,7 @@ def _get_ao_hamiltonian(qcschema: QCSchema) -> ElectronicEnergy:
         hcore_b = _reshape_2(qcschema.wavefunction.scf_fock_b, nao)
     eri = _reshape_4(qcschema.wavefunction.scf_eri, nao)
 
-    hamiltonian = ElectronicEnergy.from_raw_integrals(hcore, eri, hcore_b)
-
-    return hamiltonian
+    return ElectronicEnergy.from_raw_integrals(hcore, eri, hcore_b)
 
 
 def _get_mo_hamiltonian(qcschema: QCSchema) -> ElectronicEnergy:
@@ -190,9 +188,9 @@ def _get_mo_hamiltonian_direct(qcschema: QCSchema) -> ElectronicEnergy:
     if qcschema.wavefunction.scf_eri_mo_ab is not None and hijkl_ba is None:
         hijkl_ba = np.transpose(_reshape_4(qcschema.wavefunction.scf_eri_mo_ab, norb))
 
-    hamiltonian = ElectronicEnergy.from_raw_integrals(hij, hijkl, hij_b, hijkl_bb, hijkl_ba)
-
-    return hamiltonian
+    return ElectronicEnergy.from_raw_integrals(
+        hij, hijkl, hij_b, hijkl_bb, hijkl_ba
+    )
 
 
 def _get_ao_dipole(qcschema, axis) -> ElectronicIntegrals | None:
@@ -226,10 +224,7 @@ def _get_mo_dipole_direct(qcschema, axis) -> ElectronicIntegrals | None:
 
     name_b = f"scf_dipole_mo_{axis}_b"
     integrals_b = getattr(qcschema.wavefunction, name_b, None)
-    ints_b = None
-    if integrals_b is not None:
-        ints_b = _reshape_2(integrals_b, norb)
-
+    ints_b = _reshape_2(integrals_b, norb) if integrals_b is not None else None
     return ElectronicIntegrals.from_raw_integrals(ints_a, h1_b=ints_b)
 
 
@@ -252,10 +247,8 @@ def get_ao_to_mo_from_qcschema(qcschema: QCSchema) -> BasisTransformer:
     if qcschema.wavefunction.scf_orbitals_b is not None:
         coeff_b = _reshape_2(qcschema.wavefunction.scf_orbitals_b, nao, nmo)
 
-    transformer = BasisTransformer(
+    return BasisTransformer(
         ElectronicBasis.AO,
         ElectronicBasis.MO,
         ElectronicIntegrals.from_raw_integrals(coeff_a, h1_b=coeff_b),
     )
-
-    return transformer

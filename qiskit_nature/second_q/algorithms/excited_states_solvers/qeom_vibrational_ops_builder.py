@@ -108,20 +108,20 @@ def _build_single_hopping_operator(
     num_modals: list[int],
     qubit_mapper: QubitConverter | QubitMapper,
 ) -> PauliSumOp:
-    label = []
-    for occ in excitation[0]:
-        label.append(f"+_{VibrationalOp.build_dual_index(num_modals, occ)}")
-    for unocc in excitation[1]:
-        label.append(f"-_{VibrationalOp.build_dual_index(num_modals, unocc)}")
-
+    label = [
+        f"+_{VibrationalOp.build_dual_index(num_modals, occ)}"
+        for occ in excitation[0]
+    ]
+    label.extend(
+        f"-_{VibrationalOp.build_dual_index(num_modals, unocc)}"
+        for unocc in excitation[1]
+    )
     vibrational_op = VibrationalOp({" ".join(label): 1}, num_modals)
 
     qubit_op: PauliSumOp
     if isinstance(qubit_mapper, QubitConverter):
-        qubit_op = qubit_mapper.convert_match(vibrational_op)
+        return qubit_mapper.convert_match(vibrational_op)
     elif isinstance(qubit_mapper, TaperedQubitMapper):
-        qubit_op = qubit_mapper.map_clifford(vibrational_op)
+        return qubit_mapper.map_clifford(vibrational_op)
     else:
-        qubit_op = qubit_mapper.map(vibrational_op)
-
-    return qubit_op
+        return qubit_mapper.map(vibrational_op)

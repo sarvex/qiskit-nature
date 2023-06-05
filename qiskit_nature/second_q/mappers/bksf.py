@@ -231,10 +231,7 @@ def _coulomb_exchange(  # pylint: disable=invalid-name
     b_q = _edge_operator_bi(edge_list, q)
     id_op = _pauli_id(edge_list.shape[1])
     qubit_op = (id_op - b_p).dot((id_op - b_q))
-    if p == s:  # two commutations to order as two number operators.
-        final_coeff = 0.25
-    else:  # one commutation
-        final_coeff = -0.25
+    final_coeff = 0.25 if p == s else -0.25
     return (final_coeff * h2_pqrs) * qubit_op
 
 
@@ -521,8 +518,7 @@ def _bksf_edge_list_fermionic_op(ferm_op: FermionicOp, register_length: int) -> 
 
     """
     edge_matrix = _get_adjacency_matrix(ferm_op, register_length)
-    edge_list_as_2d_array = np.asarray(np.nonzero(edge_matrix))
-    return edge_list_as_2d_array
+    return np.asarray(np.nonzero(edge_matrix))
 
 
 def _edge_operator_aij(edge_list: np.ndarray, i: int, j: int) -> SparsePauliOp:
@@ -544,7 +540,7 @@ def _edge_operator_aij(edge_list: np.ndarray, i: int, j: int) -> SparsePauliOp:
     position_ij = -1
 
     for edge_index in range(edge_list.shape[1]):
-        if set((i, j)) == set(edge_list[:, edge_index]):
+        if {i, j} == set(edge_list[:, edge_index]):
             position_ij = edge_index
             break
 

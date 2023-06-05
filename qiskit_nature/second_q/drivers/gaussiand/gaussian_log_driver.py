@@ -60,7 +60,7 @@ class GaussianLogDriver(BaseDriver):
         self._jcf = jcf
         super().__init__()
 
-    def run(self) -> GaussianLogResult:  # type: ignore[override]
+    def run(self) -> GaussianLogResult:    # type: ignore[override]
         """Runs the driver to produce a result given the supplied job control file.
 
         Returns:
@@ -81,8 +81,7 @@ class GaussianLogDriver(BaseDriver):
         )
         logger.debug("User supplied job control file\n%s", cfg)
 
-        all_text = run_g16(cfg)
-        if not all_text:
+        if all_text := run_g16(cfg):
+            return GaussianLogResult(all_text)
+        else:
             raise QiskitNatureError("Failed to capture log from stdout")
-
-        return GaussianLogResult(all_text)

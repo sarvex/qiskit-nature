@@ -118,11 +118,8 @@ def _build_single_hopping_operator(
     num_spatial_orbitals: int,
     qubit_mapper: QubitConverter | QubitMapper,
 ) -> tuple[PauliSumOp | SparsePauliOp, list[bool]]:
-    label = []
-    for occ in excitation[0]:
-        label.append(f"+_{occ}")
-    for unocc in excitation[1]:
-        label.append(f"-_{unocc}")
+    label = [f"+_{occ}" for occ in excitation[0]]
+    label.extend(f"-_{unocc}" for unocc in excitation[1])
     fer_op = FermionicOp({" ".join(label): 1.0}, num_spin_orbitals=2 * num_spatial_orbitals)
 
     if isinstance(qubit_mapper, QubitConverter):
@@ -138,7 +135,7 @@ def _build_single_hopping_operator(
         symmetries_for_commutativity = []
 
     commutativities = []
-    if not len(symmetries_for_commutativity) == 0:
+    if len(symmetries_for_commutativity) != 0:
         for symmetry in symmetries_for_commutativity:
             symmetry_op = SparsePauliOp.from_list([(symmetry.to_label(), 1.0)])
             if isinstance(qubit_op, PauliSumOp):
@@ -149,14 +146,13 @@ def _build_single_hopping_operator(
             commuting = len(paulis.commutes_with_all(symmetry_op.paulis)) == len_paulis
             anticommuting = len(paulis.anticommutes_with_all(symmetry_op.paulis)) == len_paulis
 
-            if commuting != anticommuting:  # only one of them is True
-                if commuting:
-                    commutativities.append(True)
-                elif anticommuting:
-                    commutativities.append(False)
-            else:
+            if commuting == anticommuting:
                 raise QiskitNatureError(
                     f"Symmetry {symmetry.to_label()} neither commutes nor anti-commutes "
                     "with excitation operator."
                 )
+            if commuting:
+                commutativities.append(True)
+            elif anticommuting:
+                commutativities.append(False)
     return qubit_op, commutativities

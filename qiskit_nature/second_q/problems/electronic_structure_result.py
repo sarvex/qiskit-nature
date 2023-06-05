@@ -266,10 +266,10 @@ class ElectronicStructureResult(EigenstateResult):
         """Returns computed spin"""
         if self.total_angular_momentum is None:
             return None
-        spin = []
-        for total_angular_momentum in self.total_angular_momentum:
-            spin.append((-1.0 + np.sqrt(1 + 4 * total_angular_momentum)) / 2)
-        return spin
+        return [
+            (-1.0 + np.sqrt(1 + 4 * total_angular_momentum)) / 2
+            for total_angular_momentum in self.total_angular_momentum
+        ]
 
     @property
     def num_particles(self) -> Optional[List[float]]:
@@ -307,54 +307,39 @@ class ElectronicStructureResult(EigenstateResult):
 
     def formatted(self) -> List[str]:
         """Formatted result as a list of strings"""
-        lines = []
-        lines.append("=== GROUND STATE ENERGY ===")
-        lines.append(" ")
+        lines = ["=== GROUND STATE ENERGY ===", " "]
         if self.electronic_energies is not None:
-            lines.append(
-                "* Electronic ground state energy (Hartree): "
-                f"{_complex_to_string(self.electronic_energies[0], self.formatting_precision)}"
-            )
-            lines.append(
-                "  - computed part:      "
-                f"{_complex_to_string(self.computed_energies[0], self.formatting_precision)}"
-            )
-            for name, value in self.extracted_transformer_energies.items():
-                lines.append(
-                    f"  - {name} extracted energy part: "
-                    f"{_complex_to_string(value, self.formatting_precision)}"
+            lines.extend(
+                (
+                    f"* Electronic ground state energy (Hartree): {_complex_to_string(self.electronic_energies[0], self.formatting_precision)}",
+                    f"  - computed part:      {_complex_to_string(self.computed_energies[0], self.formatting_precision)}",
                 )
+            )
+            lines.extend(
+                f"  - {name} extracted energy part: {_complex_to_string(value, self.formatting_precision)}"
+                for name, value in self.extracted_transformer_energies.items()
+            )
         if self.nuclear_repulsion_energy is not None:
-            lines.append(
-                "~ Nuclear repulsion energy (Hartree): "
-                f"{_complex_to_string(self.nuclear_repulsion_energy, self.formatting_precision)}"
+            lines.extend(
+                (
+                    f"~ Nuclear repulsion energy (Hartree): {_complex_to_string(self.nuclear_repulsion_energy, self.formatting_precision)}",
+                    f"> Total ground state energy (Hartree): {_complex_to_string(self.total_energies[0], self.formatting_precision)}",
+                )
             )
-            lines.append(
-                "> Total ground state energy (Hartree): "
-                f"{_complex_to_string(self.total_energies[0], self.formatting_precision)}"
-            )
-
         if self.computed_energies is not None and len(self.computed_energies) > 1:
-            lines.append(" ")
-            lines.append("=== EXCITED STATE ENERGIES ===")
-            lines.append(" ")
+            lines.extend((" ", "=== EXCITED STATE ENERGIES ===", " "))
             for idx, (elec_energy, total_energy) in enumerate(
                 zip(self.electronic_energies[1:], self.total_energies[1:])
             ):
-                lines.append(f"{(idx + 1): 3d}: ")
-                lines.append(
-                    "* Electronic excited state energy (Hartree): "
-                    f"{_complex_to_string(elec_energy, self.formatting_precision)}"
+                lines.extend(
+                    (
+                        f"{idx + 1: 3d}: ",
+                        f"* Electronic excited state energy (Hartree): {_complex_to_string(elec_energy, self.formatting_precision)}",
+                        f"> Total excited state energy (Hartree): {_complex_to_string(total_energy, self.formatting_precision)}",
+                    )
                 )
-                lines.append(
-                    "> Total excited state energy (Hartree): "
-                    f"{_complex_to_string(total_energy, self.formatting_precision)}"
-                )
-
         if self.has_observables():
-            lines.append(" ")
-            lines.append("=== MEASURED OBSERVABLES ===")
-            lines.append(" ")
+            lines.extend((" ", "=== MEASURED OBSERVABLES ===", " "))
             for idx, (num_particles, spin, total_angular_momentum, magnetization,) in enumerate(
                 zip(
                     self.num_particles,
@@ -375,16 +360,15 @@ class ElectronicStructureResult(EigenstateResult):
                 lines.append(line)
 
         if self.has_dipole():
-            lines.append(" ")
-            lines.append("=== DIPOLE MOMENTS ===")
-            lines.append(" ")
+            lines.extend((" ", "=== DIPOLE MOMENTS ===", " "))
             if self.nuclear_dipole_moment is not None:
-                lines.append(
-                    "~ Nuclear dipole moment (a.u.): "
-                    f"{_dipole_to_string(self.nuclear_dipole_moment, self.formatting_precision)}"
+                lines.extend(
+                    (
+                        f"~ Nuclear dipole moment (a.u.): {_dipole_to_string(self.nuclear_dipole_moment, self.formatting_precision)}",
+                        " ",
+                    )
                 )
-                lines.append(" ")
-            for idx, (elec_dip, comp_dip, extr_dip, dip, tot_dip, dip_db, tot_dip_db,) in enumerate(
+            for idx, (elec_dip, comp_dip, extr_dip, dip, tot_dip, dip_db, tot_dip_db) in enumerate(
                 zip(
                     self.electronic_dipole_moment,
                     self.computed_dipole_moment,
@@ -395,30 +379,23 @@ class ElectronicStructureResult(EigenstateResult):
                     self.total_dipole_moment_in_debye,
                 )
             ):
-                lines.append(f"{idx: 3d}: ")
-                lines.append(
-                    "  * Electronic dipole moment (a.u.): "
-                    f"{_dipole_to_string(elec_dip, self.formatting_precision)}"
-                )
-                lines.append(
-                    "    - computed part:      "
-                    f"{_dipole_to_string(comp_dip, self.formatting_precision)}"
-                )
-                for name, ex_dip in extr_dip.items():
-                    lines.append(
-                        f"    - {name} extracted energy part: "
-                        f"{_dipole_to_string(ex_dip, self.formatting_precision)}"
+                lines.extend(
+                    (
+                        f"{idx: 3d}: ",
+                        f"  * Electronic dipole moment (a.u.): {_dipole_to_string(elec_dip, self.formatting_precision)}",
+                        f"    - computed part:      {_dipole_to_string(comp_dip, self.formatting_precision)}",
                     )
+                )
+                lines.extend(
+                    f"    - {name} extracted energy part: {_dipole_to_string(ex_dip, self.formatting_precision)}"
+                    for name, ex_dip in extr_dip.items()
+                )
                 if self.nuclear_dipole_moment is not None:
-                    lines.append(
-                        "  > Dipole moment (a.u.): "
-                        f"{ _dipole_to_string(dip, self.formatting_precision)}  "
-                        f"Total: {_complex_to_string(tot_dip, self.formatting_precision)}"
-                    )
-                    lines.append(
-                        "                 (debye): "
-                        f"{_dipole_to_string(dip_db, self.formatting_precision)}  "
-                        f"Total: {_complex_to_string(tot_dip_db, self.formatting_precision)}"
+                    lines.extend(
+                        (
+                            f"  > Dipole moment (a.u.): {_dipole_to_string(dip, self.formatting_precision)}  Total: {_complex_to_string(tot_dip, self.formatting_precision)}",
+                            f"                 (debye): {_dipole_to_string(dip_db, self.formatting_precision)}  Total: {_complex_to_string(tot_dip_db, self.formatting_precision)}",
+                        )
                     )
                 lines.append(" ")
 
@@ -448,20 +425,20 @@ def _dipole_to_string(dipole: DipoleTuple, precision: int = 8):
 def _complex_to_string(value: Optional[complex], precision: int = 8) -> str:
     if value is None:
         return "None"
-    else:
-        real = (
-            "0.0"
-            if round(value.real, precision) == 0
-            else ("{:." + str(precision) + "f}").format(value.real).rstrip("0")
-        )
-        imag = (
-            ""
-            if round(value.imag, precision) == 0
-            else ("{:." + str(precision) + "f}").format(value.imag).rstrip("0") + "j"
-        )
-        string = real
-        if imag != "" and value.imag > 0:
-            string += "+" + imag
-        elif imag != "" and value.imag < 0:
+    real = (
+        "0.0"
+        if round(value.real, precision) == 0
+        else ("{:." + str(precision) + "f}").format(value.real).rstrip("0")
+    )
+    imag = (
+        ""
+        if round(value.imag, precision) == 0
+        else ("{:." + str(precision) + "f}").format(value.imag).rstrip("0") + "j"
+    )
+    string = real
+    if imag != "":
+        if value.imag > 0:
+            string += f"+{imag}"
+        elif value.imag < 0:
             string += imag
-        return string
+    return string

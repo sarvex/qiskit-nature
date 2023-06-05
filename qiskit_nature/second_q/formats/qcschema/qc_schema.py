@@ -62,15 +62,13 @@ class QCSchema(QCSchemaInput):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> QCSchema:
-        error: QCError | None = None
-        if "error" in data.keys():
-            error = QCError(**data.pop("error"))
+        error = QCError(**data.pop("error")) if "error" in data else None
         model = QCModel(**data.pop("model"))
         molecule = QCTopology(**data.pop("molecule"))
         provenance = QCProvenance(**data.pop("provenance"))
         properties = QCProperties(**data.pop("properties"))
         wavefunction: QCWavefunction | None = None
-        if "wavefunction" in data.keys():
+        if "wavefunction" in data:
             wavefunction = QCWavefunction.from_dict(data.pop("wavefunction"))
         return cls(
             **data,

@@ -154,9 +154,7 @@ class VQEClient(VariationalAlgorithm, MinimumEigensolver):
     @optimizer.setter
     def optimizer(self, optimizer: Union[Optimizer, Dict[str, Any]]) -> None:
         """Set the optimizer."""
-        if isinstance(optimizer, Optimizer):
-            self._optimizer = optimizer
-        else:
+        if not isinstance(optimizer, Optimizer):
             if "name" not in optimizer.keys():
                 raise ValueError(
                     "The optimizer dictionary must contain a ``name`` key specifying the type "
@@ -165,7 +163,7 @@ class VQEClient(VariationalAlgorithm, MinimumEigensolver):
 
             _validate_optimizer_settings(optimizer)
 
-            self._optimizer = optimizer
+        self._optimizer = optimizer
 
     @property
     def backend(self) -> Optional[Backend]:
@@ -246,10 +244,7 @@ class VQEClient(VariationalAlgorithm, MinimumEigensolver):
             return
 
         # if callback is set, return wrapped callback, else return None
-        if self._callback:
-            return wrapped_callback
-        else:
-            return None
+        return wrapped_callback if self._callback else None
 
     def compute_minimum_eigenvalue(
         self, operator: OperatorBase, aux_operators: Optional[ListOrDictType[OperatorBase]] = None
@@ -328,9 +323,10 @@ class VQEClient(VariationalAlgorithm, MinimumEigensolver):
         aux_op_eigenvalues = result.get("aux_operator_eigenvalues", None)
         if aux_op_eigenvalues is not None:
             if wrapped_type == list:
-                aux_op_eigenvalues = list(
-                    aux_op_eigenvalues.get(str(key), None) for key in range(len(aux_op_eigenvalues))
-                )
+                aux_op_eigenvalues = [
+                    aux_op_eigenvalues.get(str(key), None)
+                    for key in range(len(aux_op_eigenvalues))
+                ]
             elif wrapped_type == dict:
                 aux_op_eigenvalues = dict(
                     zip(wrapped_aux_operators.keys(), aux_op_eigenvalues.values())
